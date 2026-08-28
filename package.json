@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Browse, search and fetch Chrome / ego new-tab-page wallpaper collections",
+  "license": "MIT",
   "scripts": {
     "dev": "concurrently -n api,web -c magenta,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:api": "python3 api/server.py",

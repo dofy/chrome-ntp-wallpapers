@@ -148,3 +148,9 @@ reproduces the library exactly.
   collections at once cannot make one job's entries clobber another's.
 - The wallpapers are credited artist commissions. Fine as personal wallpaper —
   do not redistribute them.
+
+## License
+
+[MIT](LICENSE), covering the source in this repository. It does not extend to
+the artworks the tool fetches; each stays with the artist credited beside it,
+and `images/` is gitignored precisely so this repository never carries them.
