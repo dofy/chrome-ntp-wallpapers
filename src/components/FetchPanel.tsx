@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { usePresence } from '../lib/usePresence'
 import { api } from '../lib/api'
 import type { Job, RemoteCollection } from '../lib/types'
 import { Broom, ChevronDown, Close, Shuffle, Sparkle } from './Icons'
@@ -10,11 +11,13 @@ const SIZES = [
 ]
 
 interface Props {
+  open: boolean
   onClose: () => void
   onLibraryChanged: () => void
 }
 
-export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
+export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
+  const { visible } = usePresence(open, 380)
   const [collections, setCollections] = useState<RemoteCollection[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [size, setSize] = useState('4k')
@@ -78,9 +81,16 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
   const running = jobs.filter((j) => j.status === 'running')
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-ink/25 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className={`overlay fixed inset-0 z-40 flex justify-end ${
+        visible ? 'bg-ink/25 opacity-100 backdrop-blur-sm' : 'bg-ink/0 opacity-0'
+      }`}
+      onClick={onClose}
+    >
       <aside
-        className="glass-solid flex h-full w-full max-w-xl flex-col rounded-none border-y-0 border-r-0"
+        className={`glass-solid drawer flex h-full w-full max-w-xl flex-col rounded-none border-y-0 border-r-0 ${
+          visible ? 'translate-x-0' : 'translate-x-full'
+        }`}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="border-line flex items-center gap-3 border-b px-5 py-4">
@@ -95,7 +105,7 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
             <select
               value={size}
               onChange={(event) => setSize(event.target.value)}
-              className="border-line text-ink-soft cursor-pointer appearance-none rounded-full border bg-white/80 py-1.5 pr-8 pl-3 text-xs"
+              className="tx border-line hover:border-mint text-ink-soft cursor-pointer appearance-none rounded-full border bg-white/80 py-1.5 pr-8 pl-3 text-xs"
             >
               {SIZES.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -109,7 +119,7 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
             type="button"
             onClick={onClose}
             aria-label="關閉"
-            className="hover:bg-peach/20 hover:text-peach-deep text-ink-soft rounded-full p-2 transition"
+            className="tx hover:bg-peach/20 hover:text-peach-deep text-ink-soft rounded-full p-2 hover:rotate-90"
           >
             <Close className="size-5" />
           </button>
@@ -131,14 +141,14 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
                 return (
                   <li
                     key={collection.id}
-                    className="border-line rounded-blob flex items-center gap-3 border bg-white/55 p-3"
+                    className="tx border-line rounded-blob hover:border-mint flex items-center gap-3 border bg-white/55 p-3 hover:bg-white/80"
                   >
                     {collection.preview_url && (
                       <img
                         src={`${collection.preview_url}=w160-h90-p-k-no-nd-mv`}
                         alt=""
                         loading="lazy"
-                        className="bg-paper-warm h-12 w-20 shrink-0 rounded-xl object-cover"
+                        className="tx bg-paper-warm h-12 w-20 shrink-0 rounded-xl object-cover"
                       />
                     )}
                     <div className="min-w-0 flex-1">
@@ -156,7 +166,7 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
                       <button
                         type="button"
                         onClick={() => void api.cancelJob(active.id)}
-                        className="shrink-0 rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-500 transition hover:bg-red-50"
+                        className="tx shrink-0 rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50"
                       >
                         取消
                       </button>
@@ -164,7 +174,7 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
                       <button
                         type="button"
                         onClick={() => void start(collection.id)}
-                        className="border-mint text-mint-deep hover:bg-mint shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:text-white"
+                        className="tx border-mint text-mint-deep hover:bg-mint shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold hover:scale-105 hover:text-white"
                       >
                         抓取
                       </button>
@@ -208,7 +218,7 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
           <button
             type="button"
             onClick={() => void loadCollections(true)}
-            className="border-line hover:border-mint hover:text-mint-deep text-ink-soft flex items-center gap-1.5 rounded-full border bg-white/60 px-3 py-1.5 text-xs transition"
+            className="tx border-line hover:border-mint hover:text-mint-deep text-ink-soft flex items-center gap-1.5 rounded-full border bg-white/60 px-3 py-1.5 text-xs hover:bg-white/90"
           >
             <Shuffle className="size-3.5" />
             重新載入集合
@@ -219,7 +229,7 @@ export default function FetchPanel({ onClose, onLibraryChanged }: Props) {
               await api.reindex()
               onLibraryChanged()
             }}
-            className="border-line hover:border-mint hover:text-mint-deep text-ink-soft flex items-center gap-1.5 rounded-full border bg-white/60 px-3 py-1.5 text-xs transition"
+            className="tx border-line hover:border-mint hover:text-mint-deep text-ink-soft flex items-center gap-1.5 rounded-full border bg-white/60 px-3 py-1.5 text-xs hover:bg-white/90"
             title="為手動放進 images/ 的圖片補回標題、作者與來源 URL"
           >
             <Broom className="size-3.5" />
@@ -237,7 +247,7 @@ function Progress({ job }: { job: Job }) {
   return (
     <div className="mt-1.5">
       <div className="bg-paper-warm h-1.5 overflow-hidden rounded-full">
-        <div className="bg-mint h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+        <div className="bg-mint h-full rounded-full transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-ink-faint mt-1 truncate text-[11px]">
         {handled}/{job.total || '?'} · {job.current || '準備中…'}

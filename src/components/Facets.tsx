@@ -31,16 +31,16 @@ export default function Facets({ title, icon, facets, selected, onToggle }: Prop
                 type="button"
                 onClick={() => onToggle(facet.key)}
                 aria-pressed={on}
-                className={`flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-sm transition
+                className={`tx flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-sm
                   ${
                     on
-                      ? 'bg-mint text-white shadow-sm'
-                      : 'text-ink-soft hover:bg-mint-wash hover:text-mint-deep'
+                      ? 'bg-mint translate-x-1 text-white shadow-sm'
+                      : 'text-ink-soft hover:bg-mint-wash hover:text-mint-deep hover:translate-x-1'
                   }`}
               >
                 <span className="truncate">{facet.label}</span>
                 <span
-                  className={`shrink-0 rounded-full px-1.5 text-[11px] tabular-nums ${
+                  className={`tx shrink-0 rounded-full px-1.5 text-[11px] tabular-nums ${
                     on ? 'bg-white/25' : 'bg-paper-warm text-ink-faint'
                   }`}
                 >

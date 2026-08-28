@@ -18,6 +18,7 @@ import {
 } from './components/Icons'
 import { api } from './lib/api'
 import { isFetchUnlocked } from './lib/gate'
+import { usePresence } from './lib/usePresence'
 import { bytes, matches } from './lib/format'
 import type { Library, LocalImage, SortKey } from './lib/types'
 
@@ -54,9 +55,16 @@ export default function App() {
   // request, or it would sit opaque on top of the skeleton grid and make that
   // skeleton unreachable.
   const [mounted, setMounted] = useState(false)
+  const [splashGone, setSplashGone] = useState(false)
   // Evaluated once: the panel should not appear or vanish on re-render.
   const [fetchUnlocked] = useState(isFetchUnlocked)
   const searchRef = useRef<HTMLInputElement>(null)
+  const fetchPresence = usePresence(fetching, 380)
+  const lightboxPresence = usePresence(lightbox !== null, 300)
+  // Closing sets `lightbox` to null immediately, so the exit animation needs a
+  // remembered index to keep rendering the same image while it fades out.
+  const lastLightbox = useRef(0)
+  if (lightbox !== null) lastLightbox.current = lightbox
 
   const reload = useCallback(async () => {
     try {
@@ -76,8 +84,14 @@ export default function App() {
   }, [reload])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setMounted(true), 180)
-    return () => window.clearTimeout(timer)
+    const appear = window.setTimeout(() => setMounted(true), 180)
+    // Unmount once the fade-out has finished rather than leaving a dead
+    // full-screen layer in the tree.
+    const remove = window.setTimeout(() => setSplashGone(true), 900)
+    return () => {
+      window.clearTimeout(appear)
+      window.clearTimeout(remove)
+    }
   }, [])
 
   // `/` jumps to search from anywhere; Esc backs out of whatever is focused.
@@ -152,10 +166,10 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Splash leaving={mounted} />
+      {!splashGone && <Splash leaving={mounted} />}
       <Wallpaper image={backdrop} onShuffle={() => setBackdrop(pick(images))} />
 
-      <header className="glass-strong sticky top-0 z-30 rounded-none border-x-0 border-t-0">
+      <header className="glass-strong slide-down sticky top-0 z-30 rounded-none border-x-0 border-t-0">
         <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-3 px-5 py-3">
           <div className="mr-2 flex items-center gap-2">
             <img src="/favicon.svg" alt="" className="size-9 drop-shadow-sm" />
@@ -172,18 +186,19 @@ export default function App() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="搜尋標題、作者、集合…  按 / 聚焦"
-              className="glass-chip focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
+              className="glass-chip tx focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
             />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                aria-label="清除搜尋"
-                className="text-ink-faint hover:text-peach-deep absolute top-1/2 right-3 -translate-y-1/2"
-              >
-                <Close />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="清除搜尋"
+              tabIndex={query ? 0 : -1}
+              className={`tx text-ink-faint hover:text-peach-deep absolute top-1/2 right-3 -translate-y-1/2 ${
+                query ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0'
+              }`}
+            >
+              <Close />
+            </button>
           </div>
 
           <label className="text-ink-faint flex items-center gap-1.5 text-xs">
@@ -192,7 +207,7 @@ export default function App() {
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as SortKey)}
-                className="glass-chip text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-1.5 pr-8 pl-3 text-xs"
+                className="glass-chip tx hover:border-mint text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-1.5 pr-8 pl-3 text-xs"
               >
                 {SORTS.map((option) => (
                   <option key={option.key} value={option.key}>
@@ -208,7 +223,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setFetching(true)}
-              className="bg-peach hover:bg-peach-deep flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
+              className="bg-peach hover:bg-peach-deep tx flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:scale-105 hover:shadow-md"
             >
               <Sparkle className="size-4" />
               抓圖
@@ -226,20 +241,23 @@ export default function App() {
             </p>
           </div>
 
-          {filtersOn && (
-            <button
-              type="button"
-              onClick={() => {
-                setCollections(new Set())
-                setArtists(new Set())
-                setQuery('')
-              }}
-              className="glass-chip hover:border-peach hover:text-peach-deep text-ink-soft mb-5 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs transition"
-            >
-              <Broom className="size-3.5" />
-              清除所有篩選
-            </button>
-          )}
+          <div className={`collapse-y ${filtersOn ? 'collapse-y-open mb-5' : ''}`}>
+            <div>
+              <button
+                type="button"
+                tabIndex={filtersOn ? 0 : -1}
+                onClick={() => {
+                  setCollections(new Set())
+                  setArtists(new Set())
+                  setQuery('')
+                }}
+                className="glass-chip tx hover:border-peach hover:text-peach-deep text-ink-soft flex w-full items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs"
+              >
+                <Broom className="size-3.5" />
+                清除所有篩選
+              </button>
+            </div>
+          </div>
 
           <Facets
             title="集合"
@@ -295,7 +313,7 @@ export default function App() {
         </main>
       </div>
 
-      <footer className="glass-strong sticky bottom-0 z-20 rounded-none border-x-0 border-b-0">
+      <footer className="glass-strong slide-down sticky bottom-0 z-20 rounded-none border-x-0 border-b-0">
         <div className="text-ink-faint mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-[11px]">
           <WallpaperCredit image={backdrop} onShuffle={() => setBackdrop(pick(images))} />
           <span>
@@ -304,7 +322,7 @@ export default function App() {
               href="https://ntp.phpz.org"
               target="_blank"
               rel="noreferrer"
-              className="hover:text-mint-deep font-medium underline decoration-dotted underline-offset-2"
+              className="tx hover:text-mint-deep font-medium underline decoration-dotted underline-offset-2"
             >
               ntp.phpz.org
             </a>
@@ -312,17 +330,22 @@ export default function App() {
         </div>
       </footer>
 
-      {lightbox !== null && (
+      {lightboxPresence.mounted && visible.length > 0 && (
         <Lightbox
+          open={lightbox !== null}
           images={visible as LocalImage[]}
-          index={Math.min(lightbox, visible.length - 1)}
+          index={Math.min(lightbox ?? lastLightbox.current, visible.length - 1)}
           onIndex={setLightbox}
           onClose={() => setLightbox(null)}
         />
       )}
 
-      {fetchUnlocked && fetching && (
-        <FetchPanel onClose={() => setFetching(false)} onLibraryChanged={() => void reload()} />
+      {fetchUnlocked && fetchPresence.mounted && (
+        <FetchPanel
+          open={fetching}
+          onClose={() => setFetching(false)}
+          onLibraryChanged={() => void reload()}
+        />
       )}
     </div>
   )

@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react'
+import { usePresence } from '../lib/usePresence'
 import type { LocalImage } from '../lib/types'
 import { bytes, resolution } from '../lib/format'
 import { Check, ChevronLeft, ChevronRight, Close, Copy, Download, External } from './Icons'
 
 interface Props {
+  open: boolean
   images: LocalImage[]
   index: number
   onIndex: (next: number) => void
   onClose: () => void
 }
 
-export default function Lightbox({ images, index, onIndex, onClose }: Props) {
+export default function Lightbox({ open, images, index, onIndex, onClose }: Props) {
   const image = images[index]
   const [copied, setCopied] = useState(false)
+  const { visible } = usePresence(open, 300)
 
   useEffect(() => setCopied(false), [index])
 
@@ -44,7 +47,9 @@ export default function Lightbox({ images, index, onIndex, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label={image.title}
-      className="glass-solid fixed inset-0 z-50 flex flex-col rounded-none border-0"
+      className={`glass-solid overlay fixed inset-0 z-50 flex flex-col rounded-none border-0 ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
       onClick={onClose}
     >
       <header
@@ -81,7 +86,7 @@ export default function Lightbox({ images, index, onIndex, onClose }: Props) {
           type="button"
           onClick={onClose}
           aria-label="關閉"
-          className="hover:bg-peach/20 hover:text-peach-deep text-ink-soft shrink-0 rounded-full p-2 transition"
+          className="tx hover:bg-peach/20 hover:text-peach-deep text-ink-soft shrink-0 rounded-full p-2 hover:rotate-90"
         >
           <Close className="size-5" />
         </button>
@@ -90,12 +95,17 @@ export default function Lightbox({ images, index, onIndex, onClose }: Props) {
       <div className="relative flex min-h-0 flex-1 items-center justify-center p-4">
         <figure
           onClick={(event) => event.stopPropagation()}
-          className="flex max-h-full min-h-0 flex-col items-center gap-3"
+          className={`pop flex max-h-full min-h-0 flex-col items-center gap-3 ${
+            visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          }`}
         >
+          {/* Keyed on the image so stepping through with the arrows crossfades
+              rather than swapping the bitmap under the frame. */}
           <img
+            key={image.id}
             src={image.file}
             alt={image.title}
-            className="rounded-blob min-h-0 max-w-full flex-1 object-contain shadow-xl"
+            className="rounded-blob rise min-h-0 max-w-full flex-1 object-contain shadow-xl"
           />
           {image.note && (
             <figcaption className="text-ink-soft max-w-3xl shrink-0 text-center text-xs leading-relaxed">
@@ -129,7 +139,7 @@ interface PillProps {
 }
 
 function Pill({ children, label, onClick, href, download, external, hideOnSmall }: PillProps) {
-  const className = `glass-chip hover:border-mint hover:text-mint-deep text-ink-soft flex shrink-0 items-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs transition ${
+  const className = `glass-chip tx hover:border-mint hover:text-mint-deep text-ink-soft flex shrink-0 items-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs hover:scale-105 ${
     hideOnSmall ? 'hidden md:flex' : ''
   }`
   if (href) {
@@ -163,7 +173,7 @@ function Nav({ side, onClick }: { side: 'left' | 'right'; onClick: () => void })
         event.stopPropagation()
         onClick()
       }}
-      className={`glass hover:bg-mint text-ink-soft absolute top-1/2 -translate-y-1/2 rounded-full p-3 transition hover:text-white ${
+      className={`glass tx hover:bg-mint text-ink-soft absolute top-1/2 -translate-y-1/2 rounded-full p-3 hover:scale-110 hover:text-white ${
         side === 'left' ? 'left-4' : 'right-4'
       }`}
     >

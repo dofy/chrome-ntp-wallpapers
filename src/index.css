@@ -155,11 +155,22 @@ body {
 @keyframes drift {
   from {
     opacity: 0;
-    transform: scale(1.06);
+    transform: scale(1.16);
   }
   to {
     opacity: 1;
     transform: scale(1.1);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -168,9 +179,17 @@ body {
 .reveal {
   opacity: 0;
   transform: translateY(14px) scale(0.985);
+  /* `transform` carries the reveal itself; `translate` and `scale` carry the
+     Tailwind hover utilities, which compile to those separate properties. All
+     of it has to live in one declaration or the class that loses the cascade
+     leaves its half of the motion un-transitioned. */
   transition:
     opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .reveal-in {
@@ -187,8 +206,14 @@ body {
 }
 
 /* The wallpaper eases in rather than snapping when it is rolled. */
+/* New wallpaper layers fade in over the outgoing one, so a reshuffle never
+   flashes the bare page between images. */
 .drift {
-  animation: drift 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: drift 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.slide-down {
+  animation: slide-down 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .shimmer {
@@ -215,6 +240,86 @@ body {
   .drift,
   .shimmer,
   .float-in {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Shared transition shorthands. Everything interactive gets one, so no state
+   change lands as a jump.
+   --------------------------------------------------------------------------- */
+.ease-soft {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Buttons, chips, facet rows, links. */
+.tx {
+  transition-property: color, background-color, border-color, box-shadow, opacity,
+    transform, translate, scale, rotate, backdrop-filter;
+  transition-duration: 280ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tx-slow {
+  transition-property: color, background-color, border-color, box-shadow, opacity,
+    transform, translate, scale, rotate;
+  transition-duration: 480ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Overlay scrims and sliding drawers driven by usePresence. */
+.overlay {
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    backdrop-filter 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.drawer {
+  transition:
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pop {
+  transition:
+    opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Elements that appear and disappear with state (the clear-filters button, the
+   search reset) collapse smoothly instead of yanking the layout. */
+.collapse-y {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.collapse-y > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.collapse-y-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tx,
+  .tx-slow,
+  .overlay,
+  .drawer,
+  .pop,
+  .collapse-y {
+    transition: none;
+  }
+
+  .slide-down {
     animation: none;
   }
 }

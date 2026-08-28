@@ -15,7 +15,7 @@ export default function Card({ image, onOpen }: Props) {
       ref={ref}
       type="button"
       onClick={onOpen}
-      className={`group glass rounded-blob hover:border-mint focus-visible:border-mint block w-full p-2 text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1.5 focus:outline-none ${
+      className={`group glass rounded-blob hover:border-mint focus-visible:border-mint block w-full p-2 text-left hover:-translate-y-1.5 focus:outline-none ${
         shown ? 'reveal reveal-in' : 'reveal'
       }`}
     >
