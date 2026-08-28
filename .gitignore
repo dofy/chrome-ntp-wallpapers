@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Wallpaper bytes stay local — data/meta.json keeps every source URL, so
+# `pnpm dev` + one fetch reproduces the whole library on a fresh clone.
+images/
+data/thumbs/
+data/collections.json
+__pycache__/
+*.pyc

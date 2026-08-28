@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink-950: oklch(0.16 0.015 275);
+  --color-ink-900: oklch(0.21 0.018 275);
+  --color-ink-800: oklch(0.27 0.02 275);
+  --color-ink-700: oklch(0.36 0.022 275);
+  --color-accent: oklch(0.72 0.19 22);
+  --color-accent-soft: oklch(0.72 0.19 22 / 0.14);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-ink-950 text-zinc-200 antialiased;
+  font-family: ui-sans-serif, -apple-system, 'PingFang TC', 'Noto Sans TC', system-ui, sans-serif;
+}
+
+::selection {
+  @apply bg-accent text-ink-950;
+}
+
+/* Thin, unobtrusive scrollbars for the facet rail and the job log. */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-700) transparent;
+}
