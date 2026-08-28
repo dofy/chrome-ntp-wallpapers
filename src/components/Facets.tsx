@@ -7,6 +7,7 @@ interface Facet {
 }
 
 interface Props {
+  inert?: boolean
   title: string
   icon: ReactNode
   facets: Facet[]
@@ -14,7 +15,7 @@ interface Props {
   onToggle: (key: string) => void
 }
 
-export default function Facets({ title, icon, facets, selected, onToggle }: Props) {
+export default function Facets({ inert = false, title, icon, facets, selected, onToggle }: Props) {
   if (facets.length === 0) return null
   return (
     <section className="mb-6">
@@ -31,6 +32,7 @@ export default function Facets({ title, icon, facets, selected, onToggle }: Prop
                 type="button"
                 onClick={() => onToggle(facet.key)}
                 aria-pressed={on}
+                tabIndex={inert ? -1 : 0}
                 className={`tx flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-sm
                   ${
                     on

@@ -10,6 +10,8 @@ interface Facet {
 }
 
 interface Props {
+  /** Collapsed out of view: keep its controls out of the tab order. */
+  inert?: boolean
   imageCount: number
   totalBytes: number
   collectionFacets: Facet[]
@@ -28,6 +30,7 @@ interface Props {
  * lists scroll.
  */
 export default function FacetRail({
+  inert = false,
   imageCount,
   totalBytes,
   collectionFacets,
@@ -52,7 +55,7 @@ export default function FacetRail({
         <div>
           <button
             type="button"
-            tabIndex={filtersOn ? 0 : -1}
+            tabIndex={filtersOn && !inert ? 0 : -1}
             onClick={onClear}
             className="chip tx hover:border-peach hover:text-peach-deep text-ink-soft mt-4 flex w-full items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs"
           >
@@ -64,6 +67,7 @@ export default function FacetRail({
 
       <div className="scroll-slim -mr-2 min-h-0 flex-1 overflow-y-auto pt-5 pr-2">
         <Facets
+          inert={inert}
           title={m.facet_collections()}
           icon={<Folder className="size-3.5" />}
           facets={collectionFacets}
@@ -71,6 +75,7 @@ export default function FacetRail({
           onToggle={onToggleCollection}
         />
         <Facets
+          inert={inert}
           title={m.facet_artists()}
           icon={<Brush className="size-3.5" />}
           facets={artistFacets}

@@ -71,6 +71,7 @@ export default function App() {
   const [filterSheet, setFilterSheet] = useState(false)
   const { locale, setLocale } = useLocale()
   const [shortcuts, setShortcuts] = useState(false)
+  const [railHidden, setRailHidden] = useState(false)
   const compact = useMediaQuery('(max-width: 639px)')
   const lgUp = useMediaQuery('(min-width: 1024px)')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -191,7 +192,11 @@ export default function App() {
         searchRef.current?.focus()
       },
     },
-    { key: 'f', run: () => (compact || !lgUp ? setFilterSheet((open) => !open) : undefined) },
+    {
+      key: 'f',
+      run: () =>
+        lgUp ? setRailHidden((hidden) => !hidden) : setFilterSheet((open) => !open),
+    },
     { key: 'g', run: () => fetchUnlocked && setFetching(true) },
     { key: 'b', run: () => setBackdrop(pick(images)) },
     {
@@ -213,6 +218,7 @@ export default function App() {
         if (lightbox !== null) return setLightbox(null)
         if (fetching) return setFetching(false)
         if (filterSheet) return setFilterSheet(false)
+        if (railHidden) return setRailHidden(false)
         if (document.activeElement === searchRef.current) {
           searchRef.current?.blur()
           setSearchOpen(false)
@@ -340,8 +346,16 @@ export default function App() {
       </header>
 
       <div className="mx-auto flex w-full max-w-[1800px] flex-1 gap-6 px-5 py-6">
-        <aside className="glass rounded-blob rise sticky top-[84px] hidden h-[calc(100vh-150px)] w-60 shrink-0 flex-col overflow-hidden p-4 lg:flex">
+        <aside
+          aria-hidden={railHidden}
+          className={`rise sticky top-[84px] hidden h-[calc(100vh-150px)] shrink-0 flex-col overflow-hidden transition-[width,opacity,padding] duration-[380ms] ease-out lg:flex ${
+            railHidden
+              ? 'w-0 p-0 opacity-0'
+              : 'glass rounded-blob w-60 p-4 opacity-100'
+          }`}
+        >
           <FacetRail
+            inert={railHidden}
             imageCount={images.length}
             totalBytes={library?.total_bytes ?? 0}
             collectionFacets={collectionFacets}

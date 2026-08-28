@@ -263,10 +263,14 @@ body {
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Buttons, chips, facet rows, links. */
+/* Buttons, chips, facet rows, links.
+   Deliberately does NOT transition backdrop-filter. Merely naming it promotes
+   the element to its own compositing layer even when no filter is set, and
+   Chrome then paints that layer's rectangle — a hard-edged haze around an
+   otherwise rounded control. Nothing here animates the property anyway. */
 .tx {
   transition-property: color, background-color, border-color, box-shadow, opacity,
-    transform, translate, scale, rotate, backdrop-filter;
+    transform, translate, scale, rotate;
   transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
