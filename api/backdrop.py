@@ -31,6 +31,10 @@ SIZES = {
     "5k": "=w5120-h2880-p-k-no-nd-mv",
 }
 DEFAULT_SIZE = "4k"
+
+# Backdrop also publishes flat colour swatches, which carry no artist and are
+# not artwork. Hidden from the catalogue so `all` never pulls them back in.
+EXCLUDED_COLLECTIONS = frozenset({"solidcolors"})
 THUMB_EDGE = 720
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".gif")
 XSSI = re.compile(r"^\)\]\}'\s*")
@@ -110,6 +114,8 @@ def fetch_collections(language: str = "en") -> list[Collection]:
     doc = _post("collections", _proto_str(1, language))
     out: list[Collection] = []
     for row in doc[0][0][1]:
+        if row[0] in EXCLUDED_COLLECTIONS:
+            continue
         images = row[2] if len(row) > 2 and row[2] else []
         preview = images[0][1] if images and len(images[0]) > 1 else ""
         out.append(Collection(id=row[0], name=row[1], preview_url=preview or ""))
@@ -295,12 +301,43 @@ def _jpeg_size(path: str) -> tuple[int | None, int | None]:
 
 _HAS_SIPS = shutil.which("sips") is not None
 
+try:                                        # optional, and only needed off macOS
+    from PIL import Image as _PILImage
+except ImportError:                         # pragma: no cover - depends on host
+    _PILImage = None
+
+_HAS_THUMBNAILER = _HAS_SIPS or _PILImage is not None
+
+
+def _write_thumb(src: str, dst: str) -> None:
+    """Write a THUMB_EDGE-bounded JPEG of `src` to `dst`.
+
+    macOS ships `sips`, which stays the default so existing thumbnails keep
+    their exact bytes. Everywhere else (the OpenWrt box, CI) Pillow does the
+    same job. Raises if neither is available, so callers can fall back to
+    serving the full-size original.
+    """
+    if _HAS_SIPS:
+        subprocess.run(
+            ["sips", "-s", "format", "jpeg", "-s", "formatOptions", "72",
+             "-Z", str(THUMB_EDGE), src, "--out", dst],
+            check=True, capture_output=True, timeout=60,
+        )
+        return
+    if _PILImage is not None:
+        with _PILImage.open(src) as im:
+            im = im.convert("RGB")
+            im.thumbnail((THUMB_EDGE, THUMB_EDGE), _PILImage.Resampling.LANCZOS)
+            im.save(dst, "JPEG", quality=72, optimize=True)
+        return
+    raise RuntimeError("no thumbnailer: install Pillow or run on macOS")
+
 
 def ensure_thumb(collection_id: str, filename: str) -> str:
-    """Downscale to THUMB_EDGE with macOS `sips`. Falls back to the original."""
+    """Downscale to THUMB_EDGE. Falls back to the original if that is not possible."""
     src = os.path.join(IMAGES_DIR, collection_id, filename)
     rel = f"{collection_id}/{filename}"
-    if not _HAS_SIPS:
+    if not _HAS_THUMBNAILER:
         return f"/images/{rel}"
     thumb_rel = f"{collection_id}/{os.path.splitext(filename)[0]}.jpg"
     dst = os.path.join(THUMBS_DIR, *thumb_rel.split("/"))
@@ -308,13 +345,9 @@ def ensure_thumb(collection_id: str, filename: str) -> str:
         if os.path.exists(dst) and os.path.getmtime(dst) >= os.path.getmtime(src):
             return f"/thumbs/{thumb_rel}"
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        subprocess.run(
-            ["sips", "-s", "format", "jpeg", "-s", "formatOptions", "72",
-             "-Z", str(THUMB_EDGE), src, "--out", dst],
-            check=True, capture_output=True, timeout=60,
-        )
+        _write_thumb(src, dst)
         return f"/thumbs/{thumb_rel}"
-    except (subprocess.SubprocessError, OSError):
+    except (subprocess.SubprocessError, OSError, ValueError, RuntimeError):
         return f"/images/{rel}"
 
 
@@ -447,7 +480,9 @@ def _disk_collections() -> list[str]:
         return []
     return sorted(
         d for d in os.listdir(IMAGES_DIR)
-        if os.path.isdir(os.path.join(IMAGES_DIR, d)) and not d.startswith(".")
+        if os.path.isdir(os.path.join(IMAGES_DIR, d))
+        and not d.startswith(".")
+        and d not in EXCLUDED_COLLECTIONS
     )
 
 

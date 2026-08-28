@@ -25,6 +25,11 @@ CACHE_TTL = 300.0
 _cache: dict[str, tuple[float, object]] = {}
 _cache_lock = threading.Lock()
 
+# Set from --static in main(). In dev, Vite serves the app and proxies here; in
+# production there is no Vite, so the sidecar serves the built bundle itself and
+# the whole thing is one process behind one port.
+STATIC_DIR: str | None = None
+
 
 def cached(key: str, producer):
     now = time.time()
@@ -92,6 +97,27 @@ class Handler(BaseHTTPRequestHandler):
             while chunk := fh.read(256 * 1024):
                 self.wfile.write(chunk)
 
+    def _static(self, path: str) -> None:
+        """Serve the built frontend out of STATIC_DIR.
+
+        Anything that is not a real file falls back to index.html so a hard
+        refresh on a client-side route still boots the app.
+        """
+        assert STATIC_DIR is not None
+        rel = urllib.parse.unquote(path).lstrip("/") or "index.html"
+        safe = posixpath.normpath("/" + rel).lstrip("/") or "index.html"
+        candidate = os.path.join(STATIC_DIR, *safe.split("/"))
+        if os.path.isdir(candidate):
+            safe = posixpath.join(safe, "index.html")
+            candidate = os.path.join(candidate, "index.html")
+        if not os.path.isfile(candidate):
+            safe = "index.html"
+        # Vite content-hashes everything under assets/, so those are immutable;
+        # index.html points at them by name and must never be cached.
+        cache = ("public, max-age=31536000, immutable"
+                 if safe.startswith("assets/") else "no-store")
+        return self._file(STATIC_DIR, safe, cache)
+
     # ---------------------------------------------------------------- routing
     def do_OPTIONS(self) -> None:                              # noqa: N802
         self.send_response(204)
@@ -153,6 +179,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/jobs":
             return self._json({"jobs": bd.REGISTRY.snapshot(), "active": bd.REGISTRY.active()})
 
+        if STATIC_DIR and not path.startswith("/api/"):
+            return self._static(path)
+
         return self._error(404, f"no route for GET {path}")
 
     def do_POST(self) -> None:                                 # noqa: N802
@@ -193,12 +222,18 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--no-reindex", action="store_true",
                         help="skip the startup metadata backfill")
+    parser.add_argument("--static", default=os.path.join(bd.ROOT, "dist"),
+                        help="built frontend to serve; ignored when absent")
     args = parser.parse_args()
+
+    global STATIC_DIR
+    STATIC_DIR = args.static if args.static and os.path.isdir(args.static) else None
 
     os.makedirs(bd.THUMBS_DIR, exist_ok=True)
     library = bd.build_library(make_thumbs=False)
     print(f"ntp-gallery sidecar  http://{args.host}:{args.port}")
     print(f"  library: {len(library)} images in {bd.IMAGES_DIR}")
+    print(f"  static:  {STATIC_DIR or 'disabled (no dist/) - API only'}")
 
     if not args.no_reindex:
         def warm() -> None:

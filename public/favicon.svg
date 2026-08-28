@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fe0d4"/>
+      <stop offset="1" stop-color="#3fb8ae"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffaf0"/>
+      <stop offset="1" stop-color="#ffe9c9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded tile. Big radius so it still reads as a soft square at 16px. -->
+  <rect width="32" height="32" rx="9" fill="url(#sky)"/>
+
+  <!-- Sun, offset left so the taller peak does not cover it -->
+  <circle cx="10.5" cy="11" r="4" fill="#ffb27a"/>
+
+  <!-- Two overlapping hills, clipped by the tile's own rounded corners -->
+  <clipPath id="tile">
+    <rect width="32" height="32" rx="9"/>
+  </clipPath>
+  <g clip-path="url(#tile)">
+    <path d="M-2 27 11 15.5 21 27z" fill="url(#hill)" opacity=".95"/>
+    <path d="M13 27 22 17.5 34 27z" fill="url(#hill)"/>
+  </g>
+
+  <!-- Specular rim, matching the liquid-glass surfaces in the app -->
+  <rect x=".75" y=".75" width="30.5" height="30.5" rx="8.4"
+        fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="1.5"/>
+</svg>

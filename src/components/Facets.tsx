@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 interface Facet {
   key: string
   label: string
@@ -6,16 +8,18 @@ interface Facet {
 
 interface Props {
   title: string
+  icon: ReactNode
   facets: Facet[]
   selected: Set<string>
   onToggle: (key: string) => void
 }
 
-export default function Facets({ title, facets, selected, onToggle }: Props) {
+export default function Facets({ title, icon, facets, selected, onToggle }: Props) {
   if (facets.length === 0) return null
   return (
     <section className="mb-6">
-      <h3 className="mb-2 px-1 text-[11px] font-semibold tracking-widest text-zinc-500 uppercase">
+      <h3 className="text-ink-faint mb-2 flex items-center gap-1.5 px-1 text-[11px] font-bold tracking-wider uppercase">
+        {icon}
         {title}
       </h3>
       <ul className="space-y-0.5">
@@ -27,13 +31,18 @@ export default function Facets({ title, facets, selected, onToggle }: Props) {
                 type="button"
                 onClick={() => onToggle(facet.key)}
                 aria-pressed={on}
-                className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition
-                  ${on ? 'bg-accent-soft text-accent' : 'text-zinc-400 hover:bg-ink-800 hover:text-zinc-200'}`}
+                className={`flex w-full items-center justify-between gap-2 rounded-full px-3 py-1.5 text-left text-sm transition
+                  ${
+                    on
+                      ? 'bg-mint text-white shadow-sm'
+                      : 'text-ink-soft hover:bg-mint-wash hover:text-mint-deep'
+                  }`}
               >
                 <span className="truncate">{facet.label}</span>
                 <span
-                  className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] tabular-nums
-                    ${on ? 'bg-accent/20 text-accent' : 'bg-ink-800 text-zinc-500'}`}
+                  className={`shrink-0 rounded-full px-1.5 text-[11px] tabular-nums ${
+                    on ? 'bg-white/25' : 'bg-paper-warm text-ink-faint'
+                  }`}
                 >
                   {facet.count}
                 </span>

@@ -3,7 +3,21 @@ import Card from './components/Card'
 import Facets from './components/Facets'
 import FetchPanel from './components/FetchPanel'
 import Lightbox from './components/Lightbox'
+import Skeleton from './components/Skeleton'
+import Splash from './components/Splash'
+import Wallpaper, { WallpaperCredit } from './components/Wallpaper'
+import {
+  Broom,
+  Brush,
+  ChevronDown,
+  Close,
+  Folder,
+  Search,
+  SortIcon,
+  Sparkle,
+} from './components/Icons'
 import { api } from './lib/api'
+import { isFetchUnlocked } from './lib/gate'
 import { bytes, matches } from './lib/format'
 import type { Library, LocalImage, SortKey } from './lib/types'
 
@@ -21,6 +35,10 @@ function toggle(set: Set<string>, key: string): Set<string> {
   return next
 }
 
+function pick<T>(items: T[]): T | null {
+  return items.length ? items[Math.floor(Math.random() * items.length)] : null
+}
+
 export default function App() {
   const [library, setLibrary] = useState<Library | null>(null)
   const [error, setError] = useState('')
@@ -30,14 +48,26 @@ export default function App() {
   const [artists, setArtists] = useState<Set<string>>(new Set())
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [fetching, setFetching] = useState(false)
+  const [backdrop, setBackdrop] = useState<LocalImage | null>(null)
+  const [ready, setReady] = useState(false)
+  // The splash covers the first paint only. It must not wait for the library
+  // request, or it would sit opaque on top of the skeleton grid and make that
+  // skeleton unreachable.
+  const [mounted, setMounted] = useState(false)
+  // Evaluated once: the panel should not appear or vanish on re-render.
+  const [fetchUnlocked] = useState(isFetchUnlocked)
   const searchRef = useRef<HTMLInputElement>(null)
 
   const reload = useCallback(async () => {
     try {
-      setLibrary(await api.library())
+      const next = await api.library()
+      setLibrary(next)
+      setBackdrop((current) => current ?? pick(next.images))
       setError('')
     } catch (exc) {
       setError(exc instanceof Error ? exc.message : String(exc))
+    } finally {
+      setReady(true)
     }
   }, [])
 
@@ -45,10 +75,16 @@ export default function App() {
     void reload()
   }, [reload])
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 180)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   // `/` jumps to search from anywhere; Esc backs out of whatever is focused.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement
+      const typing =
+        event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement
       if (event.key === '/' && !typing) {
         event.preventDefault()
         searchRef.current?.focus()
@@ -116,65 +152,76 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-ink-800 bg-ink-950/90 sticky top-0 z-30 border-b backdrop-blur">
+      <Splash leaving={mounted} />
+      <Wallpaper image={backdrop} onShuffle={() => setBackdrop(pick(images))} />
+
+      <header className="glass-strong sticky top-0 z-30 rounded-none border-x-0 border-t-0">
         <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-3 px-5 py-3">
-          <div className="mr-2">
-            <h1 className="text-sm font-semibold tracking-tight text-zinc-100">
-              NTP Gallery
-            </h1>
-            <p className="text-[11px] text-zinc-500">Chrome / ego 新分頁壁紙庫</p>
+          <div className="mr-2 flex items-center gap-2">
+            <img src="/favicon.svg" alt="" className="size-9 drop-shadow-sm" />
+            <div>
+              <h1 className="text-sm font-bold tracking-tight">NTP Gallery</h1>
+              <p className="text-ink-faint text-[11px]">藝術家壁紙收藏</p>
+            </div>
           </div>
 
           <div className="relative min-w-56 flex-1">
+            <Search className="text-ink-faint pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
               ref={searchRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜尋標題、作者、集合…  （按 / 聚焦）"
-              className="bg-ink-900 border-ink-800 focus:border-accent w-full rounded-lg border py-2 pr-8 pl-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+              placeholder="搜尋標題、作者、集合…  按 / 聚焦"
+              className="glass-chip focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery('')}
                 aria-label="清除搜尋"
-                className="absolute top-1/2 right-2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
+                className="text-ink-faint hover:text-peach-deep absolute top-1/2 right-3 -translate-y-1/2"
               >
-                ✕
+                <Close />
               </button>
             )}
           </div>
 
-          <label className="flex items-center gap-1.5 text-xs text-zinc-500">
-            排序
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as SortKey)}
-              className="bg-ink-900 border-ink-800 rounded-md border px-2 py-1.5 text-xs text-zinc-200"
-            >
-              {SORTS.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <label className="text-ink-faint flex items-center gap-1.5 text-xs">
+            <SortIcon />
+            <span className="relative">
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as SortKey)}
+                className="glass-chip text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-1.5 pr-8 pl-3 text-xs"
+              >
+                {SORTS.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="text-ink-faint pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
+            </span>
           </label>
 
-          <button
-            type="button"
-            onClick={() => setFetching(true)}
-            className="bg-accent text-ink-950 rounded-lg px-3.5 py-2 text-xs font-semibold transition hover:brightness-110"
-          >
-            抓圖
-          </button>
+          {fetchUnlocked && (
+            <button
+              type="button"
+              onClick={() => setFetching(true)}
+              className="bg-peach hover:bg-peach-deep flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
+            >
+              <Sparkle className="size-4" />
+              抓圖
+            </button>
+          )}
         </div>
       </header>
 
       <div className="mx-auto flex w-full max-w-[1800px] flex-1 gap-6 px-5 py-6">
-        <aside className="scroll-slim sticky top-[68px] hidden h-[calc(100vh-100px)] w-56 shrink-0 overflow-y-auto lg:block">
-          <div className="border-ink-800 mb-6 rounded-lg border px-3 py-2.5">
-            <p className="text-xs text-zinc-500">圖庫</p>
-            <p className="mt-0.5 text-sm text-zinc-200 tabular-nums">
+        <aside className="glass rounded-blob scroll-slim rise sticky top-[84px] hidden h-[calc(100vh-150px)] w-60 shrink-0 overflow-y-auto p-4 lg:block">
+          <div className="border-white/60 mb-5 border-b pb-3">
+            <p className="text-ink-faint text-xs">圖庫</p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums">
               {images.length} 張 · {bytes(library?.total_bytes ?? 0)}
             </p>
           </div>
@@ -187,20 +234,23 @@ export default function App() {
                 setArtists(new Set())
                 setQuery('')
               }}
-              className="border-ink-700 hover:border-accent hover:text-accent mb-5 w-full rounded-md border px-2 py-1.5 text-xs text-zinc-400 transition"
+              className="glass-chip hover:border-peach hover:text-peach-deep text-ink-soft mb-5 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs transition"
             >
+              <Broom className="size-3.5" />
               清除所有篩選
             </button>
           )}
 
           <Facets
             title="集合"
+            icon={<Folder className="size-3.5" />}
             facets={collectionFacets}
             selected={collections}
             onToggle={(key) => setCollections((prev) => toggle(prev, key))}
           />
           <Facets
             title="作者"
+            icon={<Brush className="size-3.5" />}
             facets={artistFacets}
             selected={artists}
             onToggle={(key) => setArtists((prev) => toggle(prev, key))}
@@ -209,24 +259,30 @@ export default function App() {
 
         <main className="min-w-0 flex-1">
           {error && (
-            <div className="mb-4 rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-              <p className="font-medium">無法連上後端</p>
-              <p className="mt-1 text-xs text-red-400/80">{error}</p>
-              <p className="mt-2 font-mono text-xs text-red-400/60">python3 api/server.py</p>
+            <div className="rounded-blob mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              <p className="font-semibold">無法連上後端</p>
+              <p className="mt-1 text-xs text-red-500">{error}</p>
+              <p className="mt-2 font-mono text-xs text-red-400">python3 api/server.py</p>
             </div>
           )}
 
-          <p className="mb-3 text-xs text-zinc-500 tabular-nums">
+          <p className="glass-chip text-ink-soft mb-3 inline-flex rounded-full px-3 py-1 text-xs tabular-nums transition-all duration-300">
             顯示 {visible.length} / {images.length} 張 · {bytes(visibleBytes)}
           </p>
 
-          {visible.length === 0 ? (
-            <div className="border-ink-800 rounded-xl border border-dashed px-6 py-20 text-center">
-              <p className="text-sm text-zinc-400">
+          {!ready ? (
+            <Skeleton />
+          ) : visible.length === 0 ? (
+            <div className="glass rounded-blob border-dashed px-6 py-20 text-center">
+              <p className="text-ink-soft text-sm">
                 {images.length === 0 ? '圖庫是空的' : '沒有符合條件的圖片'}
               </p>
-              <p className="mt-1 text-xs text-zinc-600">
-                {images.length === 0 ? '點右上「抓圖」下載一個集合' : '換個關鍵字或清除篩選'}
+              <p className="text-ink-faint mt-1 text-xs">
+                {images.length > 0
+                  ? '換個關鍵字或清除篩選'
+                  : fetchUnlocked
+                    ? '點右上「抓圖」下載一個集合'
+                    : '執行 python3 api/cli.py all 下載壁紙'}
               </p>
             </div>
           ) : (
@@ -239,6 +295,23 @@ export default function App() {
         </main>
       </div>
 
+      <footer className="glass-strong sticky bottom-0 z-20 rounded-none border-x-0 border-b-0">
+        <div className="text-ink-faint mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-[11px]">
+          <WallpaperCredit image={backdrop} onShuffle={() => setBackdrop(pick(images))} />
+          <span>
+            © {new Date().getFullYear()}{' '}
+            <a
+              href="https://ntp.phpz.org"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-mint-deep font-medium underline decoration-dotted underline-offset-2"
+            >
+              ntp.phpz.org
+            </a>
+          </span>
+        </div>
+      </footer>
+
       {lightbox !== null && (
         <Lightbox
           images={visible as LocalImage[]}
@@ -248,7 +321,7 @@ export default function App() {
         />
       )}
 
-      {fetching && (
+      {fetchUnlocked && fetching && (
         <FetchPanel onClose={() => setFetching(false)} onLibraryChanged={() => void reload()} />
       )}
     </div>

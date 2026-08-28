@@ -1,7 +1,7 @@
 # NTP Gallery
 
 Browse, search and fetch the wallpaper collections Google publishes through its
-**Backdrop** service — 226 pieces of commissioned artwork across nine
+**Backdrop** service — 200 pieces of commissioned artwork across eight
 collections, at up to 5120×2880.
 
 <img width="900" alt="gallery" src="data/.screenshot.png" />
@@ -54,8 +54,13 @@ file size, or most recently added.
 
 A side panel lists every remote collection with its local/remote count, a
 1080p–5K size picker, live per-file progress, and a cancel button. Files already
-on disk are skipped, so re-running a collection is cheap. Everything is also
-available from the CLI below.
+on disk are skipped, so re-running a collection is cheap.
+
+The button that opens it appears only when the address bar carries
+`?begin=again` — see <http://localhost:5188/?begin=again>. That keeps a
+destructive-ish control out of the way during ordinary browsing; it is **not**
+access control, since `POST /api/fetch` stays reachable either way. Fetching is
+also available from the CLI below.
 
 ### Categorise
 
@@ -66,6 +71,14 @@ and combine with the search box.
 
 Multi-term substring matching over title, artist, collection, path, and the
 description line some collections carry. Press `/` to focus it from anywhere.
+
+### Look
+
+One wallpaper is picked at random per visit and blurred behind the page, with
+the surfaces above it rendered as liquid glass so the colour refracts through.
+The footer credits whichever image was rolled and can reshuffle it. Cards fade
+up as they scroll into view, driven by a single shared IntersectionObserver, and
+all of it collapses to static layout under `prefers-reduced-motion`.
 
 ## CLI
 
@@ -93,14 +106,14 @@ data/
   thumbs/       generated thumbnails                     (gitignored)
 ```
 
-`images/` is gitignored — the full catalogue is 226 files, roughly 410 MB at 4K.
+`images/` is gitignored — the full catalogue is 200 files, roughly 407 MB at 4K.
 `data/meta.json` keeps every source URL, so a fresh clone plus one fetch
 reproduces the library exactly.
 
 ## Notes
 
-- **Backdrop mixes PNG and JPEG** (113 of each across the full catalogue) and
-  ignores the extension implied by the URL. Downloads are named from their magic
+- **Backdrop mixes PNG and JPEG** (113 / 87 across the catalogue) and ignores
+  the extension implied by the URL. Downloads are named from their magic
   bytes, and `--fix-ext` repairs anything an older run mislabelled.
 - **Attribution arrives in three shapes.** Most collections give a separate
   artist line; Black Artists folds it into the title as `"<title> by <artist>"`,
@@ -112,8 +125,11 @@ reproduces the library exactly.
   percent-decodes request paths, before the traversal check rather than after,
   so an encoded `%2e%2e` cannot slip past it.
 - Thumbnails use macOS `sips`. Without it the grid falls back to full-res images.
-- The catalogue currently holds nine collections; the older Landscapes,
-  Cityscapes and Art sets are no longer served.
+- The catalogue currently holds eight collections; the older Landscapes,
+  Cityscapes and Art sets are no longer served. Backdrop also publishes a flat
+  colour-swatch set, which is not artwork and carries no artist —
+  `EXCLUDED_COLLECTIONS` in `api/backdrop.py` keeps it out of the catalogue so
+  `all` never pulls it back in.
 - Metadata writes are merged under one reentrant lock, so queueing several
   collections at once cannot make one job's entries clobber another's.
 - The wallpapers are credited artist commissions. Fine as personal wallpaper —
