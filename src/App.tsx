@@ -233,15 +233,15 @@ export default function App() {
       </header>
 
       <div className="mx-auto flex w-full max-w-[1800px] flex-1 gap-6 px-5 py-6">
-        <aside className="glass rounded-blob scroll-slim rise sticky top-[84px] hidden h-[calc(100vh-150px)] w-60 shrink-0 overflow-y-auto p-4 lg:block">
-          <div className="border-white/60 mb-5 border-b pb-3">
+        <aside className="glass rounded-blob rise sticky top-[84px] hidden h-[calc(100vh-150px)] w-60 shrink-0 flex-col overflow-hidden p-4 lg:flex">
+          <div className="shrink-0 border-b border-white/60 pb-3">
             <p className="text-ink-faint text-xs">圖庫</p>
             <p className="mt-0.5 text-sm font-semibold tabular-nums">
               {images.length} 張 · {bytes(library?.total_bytes ?? 0)}
             </p>
           </div>
 
-          <div className={`collapse-y ${filtersOn ? 'collapse-y-open mb-5' : ''}`}>
+          <div className={`collapse-y shrink-0 ${filtersOn ? 'collapse-y-open' : ''}`}>
             <div>
               <button
                 type="button"
@@ -259,20 +259,22 @@ export default function App() {
             </div>
           </div>
 
-          <Facets
-            title="集合"
-            icon={<Folder className="size-3.5" />}
-            facets={collectionFacets}
-            selected={collections}
-            onToggle={(key) => setCollections((prev) => toggle(prev, key))}
-          />
-          <Facets
-            title="作者"
-            icon={<Brush className="size-3.5" />}
-            facets={artistFacets}
-            selected={artists}
-            onToggle={(key) => setArtists((prev) => toggle(prev, key))}
-          />
+          <div className="scroll-slim -mr-2 min-h-0 flex-1 overflow-y-auto pt-5 pr-2">
+            <Facets
+              title="集合"
+              icon={<Folder className="size-3.5" />}
+              facets={collectionFacets}
+              selected={collections}
+              onToggle={(key) => setCollections((prev) => toggle(prev, key))}
+            />
+            <Facets
+              title="作者"
+              icon={<Brush className="size-3.5" />}
+              facets={artistFacets}
+              selected={artists}
+              onToggle={(key) => setArtists((prev) => toggle(prev, key))}
+            />
+          </div>
         </aside>
 
         <main className="min-w-0 flex-1">

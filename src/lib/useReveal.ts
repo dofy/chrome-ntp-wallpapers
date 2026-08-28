@@ -19,9 +19,11 @@ function shared(): IntersectionObserver {
         callbacks.get(entry.target)?.(entry.isIntersecting)
       }
     },
-    // A generous margin means the fade finishes roughly as the card lands, and
-    // the reset happens well off-screen where nobody sees it snap back.
-    { rootMargin: '140px 0px', threshold: 0 },
+    // Negative bottom margin, not positive. A positive margin fires while the
+    // card is still below the fold, so the fade-up finishes before it scrolls
+    // into view and the motion is never actually seen. Pulling the boundary up
+    // means the card is already on screen when it starts to animate.
+    { rootMargin: '0px 0px -12% 0px', threshold: 0 },
   )
   return observer
 }
