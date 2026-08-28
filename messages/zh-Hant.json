@@ -51,5 +51,21 @@
   "fetch_reload": "重新載入集合",
   "fetch_reindex": "補全中繼資料",
   "fetch_reindex_hint": "為手動放進 images/ 的圖片補回標題、作者與來源 URL",
-  "language": "語言"
+  "language": "語言",
+  "shortcuts": "鍵盤快捷鍵",
+  "sc_group_global": "全域",
+  "sc_group_lightbox": "檢視器",
+  "sc_search": "聚焦搜尋",
+  "sc_filter": "開關篩選",
+  "sc_fetch": "開啟抓圖面板",
+  "sc_shuffle": "換一張背景",
+  "sc_random": "隨機開啟一張",
+  "sc_sort": "切換排序",
+  "sc_clear": "清除搜尋與篩選",
+  "sc_help": "顯示此列表",
+  "sc_nav": "上一張 / 下一張",
+  "sc_first_last": "第一張 / 最後一張",
+  "sc_copy": "複製檔案路徑",
+  "sc_download": "下載原圖",
+  "sc_esc": "關閉 / 退出"
 }

@@ -94,7 +94,18 @@ body {
     0 12px 40px oklch(0.35 0.04 260 / 0.16);
 }
 
-/* Small inline chip for text that sits directly on the wallpaper. */
+/* Chip for controls that sit INSIDE an already-frosted surface.
+   Deliberately has no backdrop-filter: nesting one inside another makes the
+   parent a new backdrop root, and Chrome then paints the child's blur as a
+   hard-edged rectangle. A plain translucent fill reads the same and costs one
+   fewer compositing layer. */
+.chip {
+  background-color: color-mix(in oklab, white 55%, transparent);
+  border: 1px solid color-mix(in oklab, white 70%, transparent);
+}
+
+/* Same look, but for text sitting directly on the wallpaper with no frosted
+   ancestor — there the blur is doing real work. */
 .glass-chip {
   background-color: color-mix(in oklab, white 52%, transparent);
   backdrop-filter: blur(12px) saturate(170%);

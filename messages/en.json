@@ -51,5 +51,21 @@
   "fetch_reload": "Reload collections",
   "fetch_reindex": "Backfill metadata",
   "fetch_reindex_hint": "Restore title, artist and source URL for files added by hand",
-  "language": "Language"
+  "language": "Language",
+  "shortcuts": "Keyboard shortcuts",
+  "sc_group_global": "Global",
+  "sc_group_lightbox": "Viewer",
+  "sc_search": "Focus search",
+  "sc_filter": "Toggle filters",
+  "sc_fetch": "Open fetch panel",
+  "sc_shuffle": "Shuffle backdrop",
+  "sc_random": "Open a random wallpaper",
+  "sc_sort": "Next sort order",
+  "sc_clear": "Clear search and filters",
+  "sc_help": "Show this list",
+  "sc_nav": "Previous / next image",
+  "sc_first_last": "First / last image",
+  "sc_copy": "Copy file path",
+  "sc_download": "Download original",
+  "sc_esc": "Close / dismiss"
 }

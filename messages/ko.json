@@ -51,5 +51,21 @@
   "fetch_reload": "컬렉션 다시 불러오기",
   "fetch_reindex": "메타데이터 채우기",
   "fetch_reindex_hint": "images/ 에 직접 넣은 파일의 제목, 작가, 원본 URL을 복원합니다",
-  "language": "언어"
+  "language": "언어",
+  "shortcuts": "키보드 단축키",
+  "sc_group_global": "전역",
+  "sc_group_lightbox": "뷰어",
+  "sc_search": "검색으로 이동",
+  "sc_filter": "필터 열기/닫기",
+  "sc_fetch": "가져오기 패널 열기",
+  "sc_shuffle": "배경 바꾸기",
+  "sc_random": "무작위로 한 장 열기",
+  "sc_sort": "정렬 순서 변경",
+  "sc_clear": "검색과 필터 지우기",
+  "sc_help": "이 목록 보기",
+  "sc_nav": "이전 / 다음 이미지",
+  "sc_first_last": "첫 / 마지막 이미지",
+  "sc_copy": "파일 경로 복사",
+  "sc_download": "원본 내려받기",
+  "sc_esc": "닫기 / 해제"
 }

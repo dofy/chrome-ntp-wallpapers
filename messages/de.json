@@ -51,5 +51,21 @@
   "fetch_reload": "Sammlungen neu laden",
   "fetch_reindex": "Metadaten ergänzen",
   "fetch_reindex_hint": "Ergänzt Titel, Künstler und Quell-URL für manuell abgelegte Dateien",
-  "language": "Sprache"
+  "language": "Sprache",
+  "shortcuts": "Tastenkürzel",
+  "sc_group_global": "Global",
+  "sc_group_lightbox": "Betrachter",
+  "sc_search": "Suche fokussieren",
+  "sc_filter": "Filter umschalten",
+  "sc_fetch": "Abruf-Panel öffnen",
+  "sc_shuffle": "Hintergrund wechseln",
+  "sc_random": "Zufälliges Bild öffnen",
+  "sc_sort": "Nächste Sortierung",
+  "sc_clear": "Suche und Filter leeren",
+  "sc_help": "Diese Liste zeigen",
+  "sc_nav": "Voriges / nächstes Bild",
+  "sc_first_last": "Erstes / letztes Bild",
+  "sc_copy": "Dateipfad kopieren",
+  "sc_download": "Original herunterladen",
+  "sc_esc": "Schließen / abbrechen"
 }

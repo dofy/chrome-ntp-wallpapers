@@ -51,5 +51,21 @@
   "fetch_reload": "コレクションを再読み込み",
   "fetch_reindex": "メタデータを補完",
   "fetch_reindex_hint": "手動で images/ に置いた画像にタイトル・作者・元 URL を補完します",
-  "language": "言語"
+  "language": "言語",
+  "shortcuts": "キーボードショートカット",
+  "sc_group_global": "全体",
+  "sc_group_lightbox": "ビューア",
+  "sc_search": "検索にフォーカス",
+  "sc_filter": "絞り込みを開閉",
+  "sc_fetch": "取得パネルを開く",
+  "sc_shuffle": "背景を切り替える",
+  "sc_random": "ランダムに1枚開く",
+  "sc_sort": "並び替えを切り替え",
+  "sc_clear": "検索と絞り込みを解除",
+  "sc_help": "この一覧を表示",
+  "sc_nav": "前 / 次の画像",
+  "sc_first_last": "最初 / 最後の画像",
+  "sc_copy": "ファイルパスをコピー",
+  "sc_download": "原寸をダウンロード",
+  "sc_esc": "閉じる / 解除"
 }

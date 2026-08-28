@@ -30,7 +30,7 @@ export default function Card({ image, onOpen }: Props) {
           decoding="async"
           className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
         />
-        <span className="glass-chip text-ink-soft absolute right-2 bottom-2 rounded-full px-2 py-0.5 text-[10px] tabular-nums opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <span className="chip text-ink-soft absolute right-2 bottom-2 rounded-full px-2 py-0.5 text-[10px] tabular-nums opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           {resolution(image.width, image.height)}
         </span>
       </div>

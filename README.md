@@ -86,6 +86,18 @@ slide, the lightbox scales, and controls that come and go collapse their width
 or height instead of yanking the layout. All of it becomes static under
 `prefers-reduced-motion`.
 
+### Keyboard
+
+`?` lists every binding. Globally: `/` search, `f` filters, `g` fetch, `b`
+shuffle the backdrop, `r` open a random wallpaper, `s` next sort order, `x` clear
+search and filters. In the viewer: `←` `→` to move, `Home` `End` to jump, `c`
+copy the path, `d` download.
+
+`Esc` closes the innermost thing that is open — help, then viewer, then a drawer,
+then the search field — and clears the filters when nothing is open. Bindings are
+skipped while typing and whenever a modifier is held, so `⌘F` still belongs to
+the browser.
+
 ### Languages
 
 Eight locales — English, 繁體中文, 简体中文, 日本語, 한국어, Français, Deutsch,

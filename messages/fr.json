@@ -51,5 +51,21 @@
   "fetch_reload": "Recharger les collections",
   "fetch_reindex": "Compléter les métadonnées",
   "fetch_reindex_hint": "Restaure le titre, l’artiste et l’URL source des fichiers ajoutés à la main",
-  "language": "Langue"
+  "language": "Langue",
+  "shortcuts": "Raccourcis clavier",
+  "sc_group_global": "Global",
+  "sc_group_lightbox": "Visionneuse",
+  "sc_search": "Aller à la recherche",
+  "sc_filter": "Afficher les filtres",
+  "sc_fetch": "Ouvrir le panneau de récupération",
+  "sc_shuffle": "Changer de fond",
+  "sc_random": "Ouvrir une image au hasard",
+  "sc_sort": "Ordre de tri suivant",
+  "sc_clear": "Effacer recherche et filtres",
+  "sc_help": "Afficher cette liste",
+  "sc_nav": "Image précédente / suivante",
+  "sc_first_last": "Première / dernière image",
+  "sc_copy": "Copier le chemin",
+  "sc_download": "Télécharger l’original",
+  "sc_esc": "Fermer / quitter"
 }

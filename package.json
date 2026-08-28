@@ -9,9 +9,10 @@
     "dev": "concurrently -n api,web -c magenta,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:api": "python3 api/server.py",
     "dev:web": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "pnpm paraglide && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm paraglide && tsc --noEmit",
+    "paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --emit-ts-declarations",
     "fetch": "python3 api/cli.py"
   },
   "dependencies": {

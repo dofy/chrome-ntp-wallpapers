@@ -54,7 +54,7 @@ export default function FacetRail({
             type="button"
             tabIndex={filtersOn ? 0 : -1}
             onClick={onClear}
-            className="glass-chip tx hover:border-peach hover:text-peach-deep text-ink-soft mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs"
+            className="chip tx hover:border-peach hover:text-peach-deep text-ink-soft mt-4 flex w-full items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs"
           >
             <Broom className="size-3.5" />
             {m.clear_filters()}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Card from './components/Card'
 import FetchPanel from './components/FetchPanel'
 import Lightbox from './components/Lightbox'
+import Shortcuts from './components/Shortcuts'
 import Skeleton from './components/Skeleton'
 import Splash from './components/Splash'
 import Wallpaper, { WallpaperCredit } from './components/Wallpaper'
@@ -11,6 +12,7 @@ import { api } from './lib/api'
 import { isFetchUnlocked } from './lib/gate'
 import { usePresence } from './lib/usePresence'
 import { useMediaQuery } from './lib/useMediaQuery'
+import { useHotkeys } from './lib/useHotkeys'
 import { useLocale } from './lib/locale'
 import LocalePicker from './components/LocalePicker'
 import { m } from './paraglide/messages'
@@ -68,7 +70,9 @@ export default function App() {
   const lightboxPresence = usePresence(lightbox !== null, 300)
   const [filterSheet, setFilterSheet] = useState(false)
   const { locale, setLocale } = useLocale()
+  const [shortcuts, setShortcuts] = useState(false)
   const compact = useMediaQuery('(max-width: 639px)')
+  const lgUp = useMediaQuery('(min-width: 1024px)')
   const [searchOpen, setSearchOpen] = useState(false)
   // Below sm the search field and the action buttons share one slot: opening
   // search collapses the buttons and vice versa.
@@ -112,24 +116,7 @@ export default function App() {
     }
   }, [])
 
-  // `/` jumps to search from anywhere; Esc backs out of whatever is focused.
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      const typing =
-        event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement
-      if (event.key === '/' && !typing) {
-        event.preventDefault()
-        searchRef.current?.focus()
-      }
-      if (event.key === '/' && !typing && compact) setSearchOpen(true)
-      if (event.key === 'Escape' && typing) {
-        searchRef.current?.blur()
-        setSearchOpen(false)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [compact])
+
 
   const images = library?.images ?? []
 
@@ -190,6 +177,52 @@ export default function App() {
   const filtersOn = collections.size > 0 || artists.size > 0 || query.length > 0
   const visibleBytes = visible.reduce((sum, image) => sum + image.bytes, 0)
 
+  const clearAll = useCallback(() => {
+    setCollections(new Set())
+    setArtists(new Set())
+    setQuery('')
+  }, [])
+
+  useHotkeys([
+    {
+      key: '/',
+      run: () => {
+        if (compact) setSearchOpen(true)
+        searchRef.current?.focus()
+      },
+    },
+    { key: 'f', run: () => (compact || !lgUp ? setFilterSheet((open) => !open) : undefined) },
+    { key: 'g', run: () => fetchUnlocked && setFetching(true) },
+    { key: 'b', run: () => setBackdrop(pick(images)) },
+    {
+      key: 'r',
+      run: () => visible.length > 0 && setLightbox(Math.floor(Math.random() * visible.length)),
+    },
+    {
+      key: 's',
+      run: () => setSort((current) => SORT_KEYS[(SORT_KEYS.indexOf(current) + 1) % SORT_KEYS.length]),
+    },
+    { key: 'x', run: clearAll },
+    { key: '?', run: () => setShortcuts((open) => !open) },
+    {
+      key: 'Escape',
+      run: () => {
+        // One key, innermost surface first, so Escape always does the least
+        // surprising thing.
+        if (shortcuts) return setShortcuts(false)
+        if (lightbox !== null) return setLightbox(null)
+        if (fetching) return setFetching(false)
+        if (filterSheet) return setFilterSheet(false)
+        if (document.activeElement === searchRef.current) {
+          searchRef.current?.blur()
+          setSearchOpen(false)
+          return
+        }
+        if (filtersOn) clearAll()
+      },
+    },
+  ])
+
   return (
     <div className="flex min-h-screen flex-col">
       {!splashGone && <Splash leaving={mounted} />}
@@ -217,7 +250,7 @@ export default function App() {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={m.search_placeholder()}
                   tabIndex={showSearch ? 0 : -1}
-                  className="glass-chip tx focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
+                  className="chip tx focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
                 />
                 {/* On compact this both clears and dismisses, so one tap always
                     gets the buttons back. On wide screens it only clears. */}
@@ -249,7 +282,7 @@ export default function App() {
                   onClick={() => setSearchOpen(true)}
                   aria-label={m.search_open()}
                   tabIndex={showActions ? 0 : -1}
-                  className="glass-chip tx hover:border-mint hover:text-mint-deep text-ink-soft rounded-full border border-white/60 p-2 sm:hidden"
+                  className="chip tx hover:border-mint hover:text-mint-deep text-ink-soft rounded-full p-2 sm:hidden"
                 >
                   <Search className="size-4" />
                 </button>
@@ -261,7 +294,7 @@ export default function App() {
                   onClick={() => setFilterSheet(true)}
                   aria-label={m.filter()}
                   tabIndex={showActions ? 0 : -1}
-                  className={`glass-chip tx hover:border-mint hover:text-mint-deep relative flex items-center gap-1.5 rounded-full border border-white/60 px-3 py-2 text-xs lg:hidden ${
+                  className={`chip tx hover:border-mint hover:text-mint-deep relative flex items-center gap-1.5 rounded-full px-3 py-2 text-xs lg:hidden ${
                     filtersOn ? 'text-mint-deep border-mint' : 'text-ink-soft'
                   }`}
                 >
@@ -277,7 +310,7 @@ export default function App() {
                       onChange={(event) => setSort(event.target.value as SortKey)}
                       aria-label={m.sort_label()}
                       tabIndex={showActions ? 0 : -1}
-                      className="glass-chip tx hover:border-mint text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-2 pr-7 pl-3 text-xs"
+                      className="chip tx hover:border-mint text-ink cursor-pointer appearance-none rounded-full py-2 pr-7 pl-3 text-xs"
                     >
                       {SORT_KEYS.map((key) => (
                         <option key={key} value={key}>
@@ -318,11 +351,7 @@ export default function App() {
             filtersOn={filtersOn}
             onToggleCollection={(key) => setCollections((prev) => toggle(prev, key))}
             onToggleArtist={(key) => setArtists((prev) => toggle(prev, key))}
-            onClear={() => {
-              setCollections(new Set())
-              setArtists(new Set())
-              setQuery('')
-            }}
+            onClear={clearAll}
           />
         </aside>
 
@@ -433,15 +462,17 @@ export default function App() {
             filtersOn={filtersOn}
             onToggleCollection={(key) => setCollections((prev) => toggle(prev, key))}
             onToggleArtist={(key) => setArtists((prev) => toggle(prev, key))}
-            onClear={() => {
-              setCollections(new Set())
-              setArtists(new Set())
-              setQuery('')
-            }}
+            onClear={clearAll}
             />
           </div>
         </div>
       )}
+
+      <Shortcuts
+        open={shortcuts}
+        fetchUnlocked={fetchUnlocked}
+        onClose={() => setShortcuts(false)}
+      />
 
       {fetchUnlocked && fetchPresence.mounted && (
         <FetchPanel

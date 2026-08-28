@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { m } from '../paraglide/messages'
 import { usePresence } from '../lib/usePresence'
+import { useHotkeys } from '../lib/useHotkeys'
 import type { LocalImage } from '../lib/types'
 import { bytes, resolution } from '../lib/format'
 import { Check, ChevronLeft, ChevronRight, Close, Copy, Download, External } from './Icons'
@@ -21,27 +22,42 @@ export default function Lightbox({ open, images, index, onIndex, onClose }: Prop
   useEffect(() => setCopied(false), [index])
 
   useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose()
-      if (event.key === 'ArrowRight') onIndex((index + 1) % images.length)
-      if (event.key === 'ArrowLeft') onIndex((index - 1 + images.length) % images.length)
-    }
-    window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => {
-      window.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
     }
-  }, [index, images.length, onClose, onIndex])
+  }, [])
 
-  if (!image) return null
-
-  async function copyPath() {
+  const copyPath = useCallback(async () => {
+    if (!image) return
     // The sidecar serves /images/<collection>/<file> straight off disk, so the
     // URL path doubles as the on-disk relative path.
     await navigator.clipboard.writeText(`images/${image.id}`)
     setCopied(true)
-  }
+  }, [image])
+
+  // Escape is owned by App, which closes the innermost surface — handling it
+  // here too would fight that.
+  useHotkeys([
+    { key: 'ArrowRight', run: () => onIndex((index + 1) % images.length) },
+    { key: 'ArrowLeft', run: () => onIndex((index - 1 + images.length) % images.length) },
+    { key: 'Home', run: () => onIndex(0) },
+    { key: 'End', run: () => onIndex(images.length - 1) },
+    { key: 'c', run: () => void copyPath() },
+    {
+      key: 'd',
+      run: () => {
+        if (!image) return
+        // Same path a click on the download pill takes.
+        const link = document.createElement('a')
+        link.href = image.file
+        link.download = ''
+        link.click()
+      },
+    },
+  ])
+
+  if (!image) return null
 
   return (
     <div
@@ -140,7 +156,7 @@ interface PillProps {
 }
 
 function Pill({ children, label, onClick, href, download, external, hideOnSmall }: PillProps) {
-  const className = `glass-chip tx hover:border-mint hover:text-mint-deep text-ink-soft flex shrink-0 items-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs hover:scale-105 ${
+  const className = `chip tx hover:border-mint hover:text-mint-deep text-ink-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs hover:scale-105 ${
     hideOnSmall ? 'hidden md:flex' : ''
   }`
   if (href) {
@@ -174,7 +190,7 @@ function Nav({ side, onClick }: { side: 'left' | 'right'; onClick: () => void })
         event.stopPropagation()
         onClick()
       }}
-      className={`glass tx hover:bg-mint text-ink-soft absolute top-1/2 -translate-y-1/2 rounded-full p-3 hover:scale-110 hover:text-white ${
+      className={`chip tx hover:bg-mint text-ink-soft absolute top-1/2 -translate-y-1/2 rounded-full p-3 shadow-md hover:scale-110 hover:text-white ${
         side === 'left' ? 'left-4' : 'right-4'
       }`}
     >
