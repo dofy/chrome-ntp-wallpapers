@@ -1,3 +1,5 @@
+import { m } from '../paraglide/messages'
+
 /**
  * First-paint splash. Covers the gap between the app shell mounting and the
  * library request returning, then fades out. Kept deliberately short-lived —
@@ -13,7 +15,7 @@ export default function Splash({ leaving }: { leaving: boolean }) {
       }`}
     >
       <img src="/favicon.svg" alt="" className="breathe size-16 drop-shadow-md" />
-      <p className="text-ink-faint text-xs tracking-widest">載入圖庫…</p>
+      <p className="text-ink-faint text-xs tracking-widest">{m.splash_loading()}</p>
     </div>
   )
 }

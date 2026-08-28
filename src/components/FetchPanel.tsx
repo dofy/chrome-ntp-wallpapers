@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { m } from '../paraglide/messages'
 import { usePresence } from '../lib/usePresence'
 import { api } from '../lib/api'
 import type { Job, RemoteCollection } from '../lib/types'
@@ -98,8 +99,8 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
             <Sparkle className="size-5" />
           </span>
           <div className="flex-1">
-            <h2 className="text-base font-bold">抓圖</h2>
-            <p className="text-ink-faint text-xs">已存在的檔案自動跳過</p>
+            <h2 className="text-base font-bold">{m.fetch()}</h2>
+            <p className="text-ink-faint text-xs">{m.fetch_subtitle()}</p>
           </div>
           <span className="relative shrink-0">
             <select
@@ -118,7 +119,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="關閉"
+            aria-label={m.close()}
             className="tx hover:bg-peach/20 hover:text-peach-deep text-ink-soft rounded-full p-2 hover:rotate-90"
           >
             <Close className="size-5" />
@@ -133,7 +134,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
           )}
 
           {loading && collections.length === 0 ? (
-            <p className="text-ink-faint text-sm">載入集合列表…</p>
+            <p className="text-ink-faint text-sm">{m.fetch_loading()}</p>
           ) : (
             <ul className="space-y-2">
               {collections.map((collection) => {
@@ -158,7 +159,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
                         <Progress job={active} />
                       ) : (
                         <p className="text-ink-faint mt-1 text-xs">
-                          本地已有 <span className="text-ink tabular-nums">{collection.downloaded}</span> 張
+                          {m.fetch_local_count({ count: collection.downloaded })}
                         </p>
                       )}
                     </div>
@@ -168,7 +169,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
                         onClick={() => void api.cancelJob(active.id)}
                         className="tx shrink-0 rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50"
                       >
-                        取消
+                        {m.cancel()}
                       </button>
                     ) : (
                       <button
@@ -176,7 +177,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
                         onClick={() => void start(collection.id)}
                         className="tx border-mint text-mint-deep hover:bg-mint shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold hover:scale-105 hover:text-white"
                       >
-                        抓取
+                        {m.fetch_start()}
                       </button>
                     )}
                   </li>
@@ -188,7 +189,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
           {jobs.length > 0 && (
             <section className="mt-6">
               <h3 className="text-ink-faint mb-2 text-[11px] font-bold tracking-wider uppercase">
-                任務紀錄
+                {m.fetch_jobs()}
               </h3>
               <ul className="space-y-2">
                 {jobs.map((job) => (
@@ -197,8 +198,8 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
                       <StatusDot status={job.status} />
                       <span className="flex-1 truncate font-medium">{job.collection_name}</span>
                       <span className="text-ink-faint tabular-nums">
-                        {job.done} 新增 · {job.skipped} 跳過
-                        {job.failed > 0 && ` · ${job.failed} 失敗`}
+                        {m.fetch_job_stats({ done: job.done, skipped: job.skipped })}
+                        {job.failed > 0 && m.fetch_job_failed({ failed: job.failed })}
                       </span>
                     </div>
                     {job.error && <p className="mt-1 text-xs text-red-500">{job.error}</p>}
@@ -221,7 +222,7 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
             className="tx border-line hover:border-mint hover:text-mint-deep text-ink-soft flex items-center gap-1.5 rounded-full border bg-white/60 px-3 py-1.5 text-xs hover:bg-white/90"
           >
             <Shuffle className="size-3.5" />
-            重新載入集合
+            {m.fetch_reload()}
           </button>
           <button
             type="button"
@@ -230,10 +231,10 @@ export default function FetchPanel({ open, onClose, onLibraryChanged }: Props) {
               onLibraryChanged()
             }}
             className="tx border-line hover:border-mint hover:text-mint-deep text-ink-soft flex items-center gap-1.5 rounded-full border bg-white/60 px-3 py-1.5 text-xs hover:bg-white/90"
-            title="為手動放進 images/ 的圖片補回標題、作者與來源 URL"
+            title={m.fetch_reindex_hint()}
           >
             <Broom className="size-3.5" />
-            補全中繼資料
+            {m.fetch_reindex()}
           </button>
         </footer>
       </aside>
@@ -250,7 +251,11 @@ function Progress({ job }: { job: Job }) {
         <div className="bg-mint h-full rounded-full transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-ink-faint mt-1 truncate text-[11px]">
-        {handled}/{job.total || '?'} · {job.current || '準備中…'}
+        {m.fetch_progress({
+          handled,
+          total: job.total || '?',
+          current: job.current || m.fetch_preparing(),
+        })}
       </p>
     </div>
   )

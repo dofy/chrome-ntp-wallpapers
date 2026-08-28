@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { m } from '../paraglide/messages'
 import { usePresence } from '../lib/usePresence'
 import type { LocalImage } from '../lib/types'
 import { bytes, resolution } from '../lib/format'
@@ -59,24 +60,24 @@ export default function Lightbox({ open, images, index, onIndex, onClose }: Prop
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-base font-bold">{image.title}</h2>
           <p className="text-ink-faint truncate text-xs">
-            {image.artist || '未署名'} · {image.collection_name} ·{' '}
+            {image.artist || m.unattributed()} · {image.collection_name} ·{' '}
             {resolution(image.width, image.height)} · {bytes(image.bytes)}
           </p>
         </div>
         <span className="text-ink-faint hidden shrink-0 px-1 text-xs tabular-nums sm:block">
           {index + 1} / {images.length}
         </span>
-        <Pill onClick={copyPath} label={copied ? '已複製' : '複製路徑'}>
+        <Pill onClick={copyPath} label={copied ? m.copied() : m.copy_path()}>
           {copied ? <Check /> : <Copy />}
         </Pill>
-        <Pill href={image.file} download label="下載原圖">
+        <Pill href={image.file} download label={m.download_original()}>
           <Download />
         </Pill>
         {image.source_url && (
           <Pill
             href={`${image.source_url}=w5120-h2880-p-k-no-nd-mv`}
             external
-            label="5K 來源"
+            label={m.source_5k()}
             hideOnSmall
           >
             <External />
@@ -85,7 +86,7 @@ export default function Lightbox({ open, images, index, onIndex, onClose }: Prop
         <button
           type="button"
           onClick={onClose}
-          aria-label="關閉"
+          aria-label={m.close()}
           className="tx hover:bg-peach/20 hover:text-peach-deep text-ink-soft shrink-0 rounded-full p-2 hover:rotate-90"
         >
           <Close className="size-5" />
@@ -122,7 +123,7 @@ export default function Lightbox({ open, images, index, onIndex, onClose }: Prop
       </div>
 
       <footer className="text-ink-faint shrink-0 pb-3 text-center text-[11px]">
-        ← → 切換 · Esc 關閉
+        {m.lightbox_keys()}
       </footer>
     </div>
   )
@@ -168,7 +169,7 @@ function Nav({ side, onClick }: { side: 'left' | 'right'; onClick: () => void })
   return (
     <button
       type="button"
-      aria-label={side === 'left' ? '上一張' : '下一張'}
+      aria-label={side === 'left' ? m.prev_image() : m.next_image()}
       onClick={(event) => {
         event.stopPropagation()
         onClick()

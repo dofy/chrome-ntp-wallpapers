@@ -86,6 +86,23 @@ slide, the lightbox scales, and controls that come and go collapse their width
 or height instead of yanking the layout. All of it becomes static under
 `prefers-reduced-motion`.
 
+### Languages
+
+Eight locales — English, 繁體中文, 简体中文, 日本語, 한국어, Français, Deutsch,
+Español — via [Paraglide JS](https://paraglidejs.com), a compiler rather than a
+runtime: each message becomes a tree-shakable typed function, so a renamed or
+missing key is a build error and unused messages never reach the bundle. All
+eight cost about 8 KB gzipped.
+
+Locale resolution is `localStorage → preferredLanguage → en`: first-time
+visitors get their browser's language, a manual pick persists. The picker sits
+in the footer and switches without a reload, so filters and scroll position
+survive it. `document.lang` and the tab title follow the active locale.
+
+Messages live in `messages/<locale>.json`. Adding a locale means listing it in
+`project.inlang/settings.json` and adding the file; the compiler then fails the
+build until every key is present.
+
 ### Small screens
 
 Below `sm` the header stays one row: the wordmark reduces to the favicon, and
@@ -114,6 +131,9 @@ api/
   server.py     HTTP sidecar: /api/*, /images/*, /thumbs/*
   cli.py        headless front-end for the same engine
 src/            React 19 + Tailwind 4 app
+  paraglide/    compiled message functions               (gitignored)
+messages/       one JSON catalogue per locale            (committed)
+project.inlang/ locales and message-format config
 images/         wallpaper bytes                          (gitignored)
 data/
   meta.json     title / artist / source URL per file     (committed)

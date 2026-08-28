@@ -1,5 +1,6 @@
 import type { LocalImage } from '../lib/types'
 import { bytes, resolution } from '../lib/format'
+import { m } from '../paraglide/messages'
 import { useReveal } from '../lib/useReveal'
 
 interface Props {
@@ -36,7 +37,7 @@ export default function Card({ image, onOpen }: Props) {
       <div className="px-2 pt-2.5 pb-1">
         <p className="truncate text-sm font-semibold">{image.title}</p>
         <p className="text-ink-faint mt-0.5 flex items-center gap-1.5 truncate text-xs">
-          <span className="truncate">{image.artist || '未署名'}</span>
+          <span className="truncate">{image.artist || m.unattributed()}</span>
           <span className="text-line">◦</span>
           <span className="shrink-0 tabular-nums">{bytes(image.bytes)}</span>
         </p>

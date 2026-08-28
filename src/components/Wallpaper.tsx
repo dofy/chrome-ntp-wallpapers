@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { m } from '../paraglide/messages'
 import { Shuffle } from './Icons'
 import type { LocalImage } from '../lib/types'
 
@@ -54,24 +55,22 @@ export function WallpaperCredit({ image, onShuffle }: Props) {
       <span className="tx-slow min-w-0 truncate" key={image?.id ?? 'none'}>
         {image ? (
           <>
-            背景
             <span className="text-ink-soft">
-              {' '}
-              《{image.title}》
+              {m.backdrop_credit({ title: image.title })}
               <span className="hidden sm:inline">
                 {image.artist && ` · ${image.artist}`}
               </span>
             </span>
           </>
         ) : (
-          <span className="text-ink-faint">背景載入中</span>
+          <span className="text-ink-faint">{m.backdrop_loading()}</span>
         )}
       </span>
       <button
         type="button"
         onClick={onShuffle}
-        title="換一張背景"
-        aria-label="換一張背景"
+        title={m.backdrop_shuffle()}
+        aria-label={m.backdrop_shuffle()}
         className="tx hover:bg-mint hover:text-white ml-0.5 shrink-0 rounded-full p-1 hover:rotate-180"
       >
         <Shuffle className="size-3.5" />

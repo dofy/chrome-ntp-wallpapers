@@ -1,3 +1,4 @@
+import { m } from '../paraglide/messages'
 import Facets from './Facets'
 import { Broom, Brush, Folder } from './Icons'
 import { bytes } from '../lib/format'
@@ -41,9 +42,9 @@ export default function FacetRail({
   return (
     <>
       <div className="shrink-0 border-b border-white/60 pb-3">
-        <p className="text-ink-faint text-xs">圖庫</p>
+        <p className="text-ink-faint text-xs">{m.library()}</p>
         <p className="mt-0.5 text-sm font-semibold tabular-nums">
-          {imageCount} 張 · {bytes(totalBytes)}
+          {m.library_stats({ count: imageCount, size: bytes(totalBytes) })}
         </p>
       </div>
 
@@ -56,21 +57,21 @@ export default function FacetRail({
             className="glass-chip tx hover:border-peach hover:text-peach-deep text-ink-soft mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs"
           >
             <Broom className="size-3.5" />
-            清除所有篩選
+            {m.clear_filters()}
           </button>
         </div>
       </div>
 
       <div className="scroll-slim -mr-2 min-h-0 flex-1 overflow-y-auto pt-5 pr-2">
         <Facets
-          title="集合"
+          title={m.facet_collections()}
           icon={<Folder className="size-3.5" />}
           facets={collectionFacets}
           selected={collections}
           onToggle={onToggleCollection}
         />
         <Facets
-          title="作者"
+          title={m.facet_artists()}
           icon={<Brush className="size-3.5" />}
           facets={artistFacets}
           selected={artists}

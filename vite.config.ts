@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 
 const SIDECAR = process.env.NTP_API ?? 'http://127.0.0.1:8791'
 
@@ -14,7 +15,19 @@ const proxy = {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    paraglideVitePlugin({
+      project: './project.inlang',
+      outdir: './src/paraglide',
+      emitTsDeclarations: true,
+      // localStorage first so a manual pick sticks, then the browser's own
+      // preference for first-time visitors. No url strategy: this is a
+      // single-page tool with no routes to localise.
+      strategy: ['localStorage', 'preferredLanguage', 'baseLocale'],
+    }),
+  ],
   server: { port: 5188, proxy },
   preview: { port: 5189, proxy },
 })

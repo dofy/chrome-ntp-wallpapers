@@ -11,16 +11,29 @@ import { api } from './lib/api'
 import { isFetchUnlocked } from './lib/gate'
 import { usePresence } from './lib/usePresence'
 import { useMediaQuery } from './lib/useMediaQuery'
+import { useLocale } from './lib/locale'
+import LocalePicker from './components/LocalePicker'
+import { m } from './paraglide/messages'
 import { bytes, matches } from './lib/format'
 import type { Library, LocalImage, SortKey } from './lib/types'
 
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: 'collection', label: '集合' },
-  { key: 'title', label: '標題' },
-  { key: 'artist', label: '作者' },
-  { key: 'bytes', label: '檔案大小' },
-  { key: 'recent', label: '最近加入' },
-]
+const SORT_KEYS: SortKey[] = ['collection', 'title', 'artist', 'bytes', 'recent']
+
+/** Resolved per render so the labels follow the active locale. */
+const SORT_LABELS: Record<SortKey, () => string> = {
+  collection: () => m.sort_collection(),
+  title: () => m.sort_title(),
+  artist: () => m.sort_artist(),
+  bytes: () => m.sort_bytes(),
+  recent: () => m.sort_recent(),
+}
+
+/**
+ * Facet key for images with no artist. A stable sentinel rather than the
+ * translated label, so switching language cannot silently invalidate an active
+ * filter.
+ */
+const NO_ARTIST = '\u0000no-artist'
 
 function toggle(set: Set<string>, key: string): Set<string> {
   const next = new Set(set)
@@ -54,6 +67,7 @@ export default function App() {
   const fetchPresence = usePresence(fetching, 380)
   const lightboxPresence = usePresence(lightbox !== null, 300)
   const [filterSheet, setFilterSheet] = useState(false)
+  const { locale, setLocale } = useLocale()
   const compact = useMediaQuery('(max-width: 639px)')
   const [searchOpen, setSearchOpen] = useState(false)
   // Below sm the search field and the action buttons share one slot: opening
@@ -134,18 +148,22 @@ export default function App() {
   const artistFacets = useMemo(() => {
     const map = new Map<string, number>()
     for (const image of images) {
-      const key = image.artist || '未署名'
+      const key = image.artist || NO_ARTIST
       map.set(key, (map.get(key) ?? 0) + 1)
     }
     return [...map.entries()]
-      .map(([key, count]) => ({ key, label: key, count }))
+      .map(([key, count]) => ({
+        key,
+        label: key === NO_ARTIST ? m.unattributed() : key,
+        count,
+      }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
   }, [images])
 
   const visible = useMemo(() => {
     const filtered = images.filter((image) => {
       if (collections.size && !collections.has(image.collection_id)) return false
-      if (artists.size && !artists.has(image.artist || '未署名')) return false
+      if (artists.size && !artists.has(image.artist || NO_ARTIST)) return false
       return matches(
         [image.title, image.artist, image.collection_name, image.note, image.id],
         query,
@@ -185,7 +203,7 @@ export default function App() {
                 favicon still identifies the page. */}
             <div className="hidden min-w-0 sm:block">
               <h1 className="truncate text-sm font-bold tracking-tight">NTP Gallery</h1>
-              <p className="text-ink-faint truncate text-[11px]">藝術家壁紙收藏</p>
+              <p className="text-ink-faint truncate text-[11px]">{m.app_subtitle()}</p>
             </div>
           </div>
 
@@ -197,7 +215,7 @@ export default function App() {
                   ref={searchRef}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="搜尋標題、作者、集合…"
+                  placeholder={m.search_placeholder()}
                   tabIndex={showSearch ? 0 : -1}
                   className="glass-chip tx focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
                 />
@@ -209,7 +227,7 @@ export default function App() {
                     setQuery('')
                     setSearchOpen(false)
                   }}
-                  aria-label={compact ? '關閉搜尋' : '清除搜尋'}
+                  aria-label={compact ? m.search_close() : m.search_clear()}
                   tabIndex={query || compact ? 0 : -1}
                   className={`tx text-ink-faint hover:text-peach-deep absolute top-1/2 right-3 -translate-y-1/2 ${
                     query || compact
@@ -229,7 +247,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  aria-label="搜尋"
+                  aria-label={m.search_open()}
                   tabIndex={showActions ? 0 : -1}
                   className="glass-chip tx hover:border-mint hover:text-mint-deep text-ink-soft rounded-full border border-white/60 p-2 sm:hidden"
                 >
@@ -241,7 +259,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setFilterSheet(true)}
-                  aria-label="篩選"
+                  aria-label={m.filter()}
                   tabIndex={showActions ? 0 : -1}
                   className={`glass-chip tx hover:border-mint hover:text-mint-deep relative flex items-center gap-1.5 rounded-full border border-white/60 px-3 py-2 text-xs lg:hidden ${
                     filtersOn ? 'text-mint-deep border-mint' : 'text-ink-soft'
@@ -257,13 +275,13 @@ export default function App() {
                     <select
                       value={sort}
                       onChange={(event) => setSort(event.target.value as SortKey)}
-                      aria-label="排序方式"
+                      aria-label={m.sort_label()}
                       tabIndex={showActions ? 0 : -1}
                       className="glass-chip tx hover:border-mint text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-2 pr-7 pl-3 text-xs"
                     >
-                      {SORTS.map((option) => (
-                        <option key={option.key} value={option.key}>
-                          {option.label}
+                      {SORT_KEYS.map((key) => (
+                        <option key={key} value={key}>
+                          {SORT_LABELS[key]()}
                         </option>
                       ))}
                     </select>
@@ -279,7 +297,7 @@ export default function App() {
                     className="bg-peach hover:bg-peach-deep tx flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold text-white shadow-sm hover:scale-105 hover:shadow-md"
                   >
                     <Sparkle className="size-4" />
-                    <span className="hidden sm:inline">抓圖</span>
+                    <span className="hidden sm:inline">{m.fetch()}</span>
                   </button>
                 )}
               </div>
@@ -311,14 +329,18 @@ export default function App() {
         <main className="min-w-0 flex-1">
           {error && (
             <div className="rounded-blob mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              <p className="font-semibold">無法連上後端</p>
+              <p className="font-semibold">{m.backend_error()}</p>
               <p className="mt-1 text-xs text-red-500">{error}</p>
               <p className="mt-2 font-mono text-xs text-red-400">python3 api/server.py</p>
             </div>
           )}
 
           <p className="glass-chip text-ink-soft mb-3 inline-flex rounded-full px-3 py-1 text-xs tabular-nums transition-all duration-300">
-            顯示 {visible.length} / {images.length} 張 · {bytes(visibleBytes)}
+            {m.showing({
+              visible: visible.length,
+              total: images.length,
+              size: bytes(visibleBytes),
+            })}
           </p>
 
           {!ready ? (
@@ -326,14 +348,14 @@ export default function App() {
           ) : visible.length === 0 ? (
             <div className="glass rounded-blob border-dashed px-6 py-20 text-center">
               <p className="text-ink-soft text-sm">
-                {images.length === 0 ? '圖庫是空的' : '沒有符合條件的圖片'}
+                {images.length === 0 ? m.empty_library() : m.empty_filtered()}
               </p>
               <p className="text-ink-faint mt-1 text-xs">
                 {images.length > 0
-                  ? '換個關鍵字或清除篩選'
+                  ? m.empty_hint_filtered()
                   : fetchUnlocked
-                    ? '點右上「抓圖」下載一個集合'
-                    : '執行 python3 api/cli.py all 下載壁紙'}
+                    ? m.empty_hint_fetch()
+                    : m.empty_hint_cli({ command: 'python3 api/cli.py all' })}
               </p>
             </div>
           ) : (
@@ -349,7 +371,8 @@ export default function App() {
       <footer className="glass-strong slide-down sticky bottom-0 z-20 rounded-none border-x-0 border-b-0">
         <div className="text-ink-faint mx-auto flex max-w-[1800px] items-center justify-between gap-3 px-3 py-2.5 text-[11px] sm:px-5 sm:py-3">
           <WallpaperCredit image={backdrop} onShuffle={() => setBackdrop(pick(images))} />
-          <span className="shrink-0">
+          <span className="flex shrink-0 items-center gap-3">
+            <LocalePicker locale={locale} onChange={setLocale} />
             © {new Date().getFullYear()}{' '}
             <a
               href="https://ntp.phpz.org"
@@ -383,18 +406,18 @@ export default function App() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="篩選"
+            aria-label={m.filter()}
             className={`glass-solid drawer flex max-h-[78vh] w-full flex-col rounded-t-[2rem] rounded-b-none border-x-0 border-b-0 p-4 ${
               sheetPresence.visible ? 'translate-y-0' : 'translate-y-full'
             }`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-3 flex shrink-0 items-center justify-between">
-              <h2 className="text-sm font-bold">篩選</h2>
+              <h2 className="text-sm font-bold">{m.filter()}</h2>
               <button
                 type="button"
                 onClick={() => setFilterSheet(false)}
-                aria-label="關閉"
+                aria-label={m.close()}
                 className="tx hover:bg-peach/20 hover:text-peach-deep text-ink-soft rounded-full p-2 hover:rotate-90"
               >
                 <Close className="size-5" />
