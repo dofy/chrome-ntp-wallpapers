@@ -48,14 +48,19 @@ export default function Wallpaper({ image }: Props) {
 
 export function WallpaperCredit({ image, onShuffle }: Props) {
   return (
-    <span className="flex items-center gap-1.5">
-      <span className="tx-slow" key={image?.id ?? 'none'}>
+    <span className="flex min-w-0 items-center gap-1.5">
+      {/* Truncates rather than wrapping: on a phone a long title plus a long
+          artist credit would otherwise push the footer to three lines. */}
+      <span className="tx-slow min-w-0 truncate" key={image?.id ?? 'none'}>
         {image ? (
           <>
             背景
             <span className="text-ink-soft">
               {' '}
-              《{image.title}》{image.artist && ` · ${image.artist}`}
+              《{image.title}》
+              <span className="hidden sm:inline">
+                {image.artist && ` · ${image.artist}`}
+              </span>
             </span>
           </>
         ) : (
@@ -67,7 +72,7 @@ export function WallpaperCredit({ image, onShuffle }: Props) {
         onClick={onShuffle}
         title="換一張背景"
         aria-label="換一張背景"
-        className="tx hover:bg-mint hover:text-white ml-0.5 rounded-full p-1 hover:rotate-180"
+        className="tx hover:bg-mint hover:text-white ml-0.5 shrink-0 rounded-full p-1 hover:rotate-180"
       >
         <Shuffle className="size-3.5" />
       </button>
