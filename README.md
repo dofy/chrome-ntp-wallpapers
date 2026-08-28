@@ -70,15 +70,29 @@ and combine with the search box.
 ### Search
 
 Multi-term substring matching over title, artist, collection, path, and the
-description line some collections carry. Press `/` to focus it from anywhere.
+description line some collections carry. `/` focuses it from anywhere and `Esc`
+leaves it.
 
 ### Look
 
 One wallpaper is picked at random per visit and blurred behind the page, with
 the surfaces above it rendered as liquid glass so the colour refracts through.
-The footer credits whichever image was rolled and can reshuffle it. Cards fade
-up as they scroll into view, driven by a single shared IntersectionObserver, and
-all of it collapses to static layout under `prefers-reduced-motion`.
+The footer credits whichever image was rolled and can reshuffle it, crossfading
+rather than cutting.
+
+Cards fade up every time they scroll into view — including on the way back —
+driven by one shared IntersectionObserver rather than one per card. Drawers
+slide, the lightbox scales, and controls that come and go collapse their width
+or height instead of yanking the layout. All of it becomes static under
+`prefers-reduced-motion`.
+
+### Small screens
+
+Below `sm` the header stays one row: the wordmark reduces to the favicon, and
+the search field becomes a button that trades places with the action group when
+tapped. Below `lg` the facet rail moves into a bottom sheet behind a filter
+button, badged while any filter is active — the desktop rail and the sheet
+render the same component, so they cannot drift apart.
 
 ## CLI
 
