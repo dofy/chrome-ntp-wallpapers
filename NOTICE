@@ -1,0 +1,9 @@
+Scope of the MIT license in LICENSE
+===================================
+
+The license covers the source code in this repository only.
+
+It does not cover the wallpapers this tool downloads. Those are commissioned
+artworks, and each remains the property of the artist credited alongside it.
+They are not distributed here — `images/` is gitignored — and fetching them for
+personal use is not permission to redistribute them.

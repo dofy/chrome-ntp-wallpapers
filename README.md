@@ -151,6 +151,6 @@ reproduces the library exactly.
 
 ## License
 
-[MIT](LICENSE), covering the source in this repository. It does not extend to
+[MIT](LICENSE), covering the source in this repository (see [NOTICE](NOTICE)). It does not extend to
 the artworks the tool fetches; each stays with the artist credited beside it,
 and `images/` is gitignored precisely so this repository never carries them.

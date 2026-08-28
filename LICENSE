@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This license covers the source code in this repository only.
-
-It does not cover the wallpapers the tool downloads. Those are commissioned
-artworks, and each remains the property of the artist credited alongside it.
-They are not distributed here — `images/` is gitignored — and fetching them for
-personal use is not permission to redistribute them.
