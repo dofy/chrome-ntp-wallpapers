@@ -256,7 +256,7 @@ export default function App() {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={m.search_placeholder()}
                   tabIndex={showSearch ? 0 : -1}
-                  className="chip tx focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
+                  className="chip tx placeholder:text-ink-faint w-full rounded-full py-2 pr-9 pl-9 text-sm focus:shadow-[inset_0_0_0_2px_var(--color-mint)] focus:outline-none"
                 />
                 {/* On compact this both clears and dismisses, so one tap always
                     gets the buttons back. On wide screens it only clears. */}
@@ -348,25 +348,33 @@ export default function App() {
       <div className="mx-auto flex w-full max-w-[1800px] flex-1 gap-6 px-5 py-6">
         <aside
           aria-hidden={railHidden}
-          className={`rise sticky top-[84px] hidden h-[calc(100vh-150px)] shrink-0 flex-col overflow-hidden transition-[width,opacity,padding] duration-[380ms] ease-out lg:flex ${
-            railHidden
-              ? 'w-0 p-0 opacity-0'
-              : 'glass rounded-blob w-60 p-4 opacity-100'
+          className={`rise sticky top-[84px] hidden h-[calc(100vh-150px)] shrink-0 overflow-hidden transition-[width] duration-[380ms] ease-out lg:block ${
+            railHidden ? 'w-0' : 'w-60'
           }`}
         >
-          <FacetRail
-            inert={railHidden}
-            imageCount={images.length}
-            totalBytes={library?.total_bytes ?? 0}
-            collectionFacets={collectionFacets}
-            artistFacets={artistFacets}
-            collections={collections}
-            artists={artists}
-            filtersOn={filtersOn}
-            onToggleCollection={(key) => setCollections((prev) => toggle(prev, key))}
-            onToggleArtist={(key) => setArtists((prev) => toggle(prev, key))}
-            onClear={clearAll}
-          />
+          {/* Fixed width and padding on the inner pane, animated width on the
+              outer one. Animating the width of the pane itself would reflow its
+              text on every frame — visibly squeezing the labels — instead of
+              sliding it out of view. */}
+          <div
+            className={`glass rounded-blob flex h-full w-60 flex-col p-4 transition-[opacity,translate] duration-[380ms] ease-out ${
+              railHidden ? '-translate-x-4 opacity-0' : 'translate-x-0 opacity-100'
+            }`}
+          >
+            <FacetRail
+              inert={railHidden}
+              imageCount={images.length}
+              totalBytes={library?.total_bytes ?? 0}
+              collectionFacets={collectionFacets}
+              artistFacets={artistFacets}
+              collections={collections}
+              artists={artists}
+              filtersOn={filtersOn}
+              onToggleCollection={(key) => setCollections((prev) => toggle(prev, key))}
+              onToggleArtist={(key) => setArtists((prev) => toggle(prev, key))}
+              onClear={clearAll}
+            />
+          </div>
         </aside>
 
         <main className="min-w-0 flex-1">
