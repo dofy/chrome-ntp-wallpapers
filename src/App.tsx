@@ -1,21 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Card from './components/Card'
-import Facets from './components/Facets'
 import FetchPanel from './components/FetchPanel'
 import Lightbox from './components/Lightbox'
 import Skeleton from './components/Skeleton'
 import Splash from './components/Splash'
 import Wallpaper, { WallpaperCredit } from './components/Wallpaper'
-import {
-  Broom,
-  Brush,
-  ChevronDown,
-  Close,
-  Folder,
-  Search,
-  SortIcon,
-  Sparkle,
-} from './components/Icons'
+import FacetRail from './components/FacetRail'
+import { ChevronDown, Close, Filter, Search, SortIcon, Sparkle } from './components/Icons'
 import { api } from './lib/api'
 import { isFetchUnlocked } from './lib/gate'
 import { usePresence } from './lib/usePresence'
@@ -61,6 +52,8 @@ export default function App() {
   const searchRef = useRef<HTMLInputElement>(null)
   const fetchPresence = usePresence(fetching, 380)
   const lightboxPresence = usePresence(lightbox !== null, 300)
+  const [filterSheet, setFilterSheet] = useState(false)
+  const sheetPresence = usePresence(filterSheet, 340)
   // Closing sets `lightbox` to null immediately, so the exit animation needs a
   // remembered index to keep rendering the same image while it fades out.
   const lastLightbox = useRef(0)
@@ -170,22 +163,26 @@ export default function App() {
       <Wallpaper image={backdrop} onShuffle={() => setBackdrop(pick(images))} />
 
       <header className="glass-strong slide-down sticky top-0 z-30 rounded-none border-x-0 border-t-0">
-        <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-3 px-5 py-3">
-          <div className="mr-2 flex items-center gap-2">
-            <img src="/favicon.svg" alt="" className="size-9 drop-shadow-sm" />
-            <div>
-              <h1 className="text-sm font-bold tracking-tight">NTP Gallery</h1>
-              <p className="text-ink-faint text-[11px]">藝術家壁紙收藏</p>
+        <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:gap-x-3 sm:px-5 sm:py-3">
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
+            <img src="/favicon.svg" alt="" className="size-9 shrink-0 drop-shadow-sm" />
+            {/* The wordmark is the first thing to go when width is scarce; the
+                favicon still identifies the page. */}
+            <div className="hidden min-w-0 sm:block">
+              <h1 className="truncate text-sm font-bold tracking-tight">NTP Gallery</h1>
+              <p className="text-ink-faint truncate text-[11px]">藝術家壁紙收藏</p>
             </div>
           </div>
 
-          <div className="relative min-w-56 flex-1">
+          {/* Search drops to its own full-width row below sm rather than being
+              squeezed to a few characters. */}
+          <div className="relative order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1">
             <Search className="text-ink-faint pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
               ref={searchRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜尋標題、作者、集合…  按 / 聚焦"
+              placeholder="搜尋標題、作者、集合…"
               className="glass-chip tx focus:border-mint focus:ring-mint-wash placeholder:text-ink-faint w-full rounded-full border border-white/60 py-2 pr-9 pl-9 text-sm focus:ring-4 focus:outline-none"
             />
             <button
@@ -201,80 +198,72 @@ export default function App() {
             </button>
           </div>
 
-          <label className="text-ink-faint flex items-center gap-1.5 text-xs">
-            <SortIcon />
-            <span className="relative">
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value as SortKey)}
-                className="glass-chip tx hover:border-mint text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-1.5 pr-8 pl-3 text-xs"
-              >
-                {SORTS.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="text-ink-faint pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2" />
-            </span>
-          </label>
-
-          {fetchUnlocked && (
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
+            {/* Facets live in the rail on wide screens and in a sheet below it,
+                so small screens keep the collection and artist filters. */}
             <button
               type="button"
-              onClick={() => setFetching(true)}
-              className="bg-peach hover:bg-peach-deep tx flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:scale-105 hover:shadow-md"
+              onClick={() => setFilterSheet(true)}
+              aria-label="篩選"
+              className={`glass-chip tx hover:border-mint hover:text-mint-deep relative flex items-center gap-1.5 rounded-full border border-white/60 px-3 py-2 text-xs lg:hidden ${
+                filtersOn ? 'text-mint-deep border-mint' : 'text-ink-soft'
+              }`}
             >
-              <Sparkle className="size-4" />
-              抓圖
+              <Filter className="size-4" />
+              {filtersOn && <span className="bg-peach size-1.5 rounded-full" />}
             </button>
-          )}
+
+            <label className="text-ink-faint flex items-center gap-1.5 text-xs">
+              <SortIcon className="hidden size-4 sm:block" />
+              <span className="relative">
+                <select
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value as SortKey)}
+                  aria-label="排序方式"
+                  className="glass-chip tx hover:border-mint text-ink cursor-pointer appearance-none rounded-full border border-white/60 py-2 pr-7 pl-3 text-xs"
+                >
+                  {SORTS.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="text-ink-faint pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2" />
+              </span>
+            </label>
+
+            {fetchUnlocked && (
+              <button
+                type="button"
+                onClick={() => setFetching(true)}
+                className="bg-peach hover:bg-peach-deep tx flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold text-white shadow-sm hover:scale-105 hover:shadow-md"
+              >
+                <Sparkle className="size-4" />
+                <span className="hidden sm:inline">抓圖</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       <div className="mx-auto flex w-full max-w-[1800px] flex-1 gap-6 px-5 py-6">
         <aside className="glass rounded-blob rise sticky top-[84px] hidden h-[calc(100vh-150px)] w-60 shrink-0 flex-col overflow-hidden p-4 lg:flex">
-          <div className="shrink-0 border-b border-white/60 pb-3">
-            <p className="text-ink-faint text-xs">圖庫</p>
-            <p className="mt-0.5 text-sm font-semibold tabular-nums">
-              {images.length} 張 · {bytes(library?.total_bytes ?? 0)}
-            </p>
-          </div>
-
-          <div className={`collapse-y shrink-0 ${filtersOn ? 'collapse-y-open' : ''}`}>
-            <div>
-              <button
-                type="button"
-                tabIndex={filtersOn ? 0 : -1}
-                onClick={() => {
-                  setCollections(new Set())
-                  setArtists(new Set())
-                  setQuery('')
-                }}
-                className="glass-chip tx hover:border-peach hover:text-peach-deep text-ink-soft flex w-full items-center justify-center gap-1.5 rounded-full border border-white/60 px-3 py-1.5 text-xs"
-              >
-                <Broom className="size-3.5" />
-                清除所有篩選
-              </button>
-            </div>
-          </div>
-
-          <div className="scroll-slim -mr-2 min-h-0 flex-1 overflow-y-auto pt-5 pr-2">
-            <Facets
-              title="集合"
-              icon={<Folder className="size-3.5" />}
-              facets={collectionFacets}
-              selected={collections}
-              onToggle={(key) => setCollections((prev) => toggle(prev, key))}
-            />
-            <Facets
-              title="作者"
-              icon={<Brush className="size-3.5" />}
-              facets={artistFacets}
-              selected={artists}
-              onToggle={(key) => setArtists((prev) => toggle(prev, key))}
-            />
-          </div>
+          <FacetRail
+            imageCount={images.length}
+            totalBytes={library?.total_bytes ?? 0}
+            collectionFacets={collectionFacets}
+            artistFacets={artistFacets}
+            collections={collections}
+            artists={artists}
+            filtersOn={filtersOn}
+            onToggleCollection={(key) => setCollections((prev) => toggle(prev, key))}
+            onToggleArtist={(key) => setArtists((prev) => toggle(prev, key))}
+            onClear={() => {
+              setCollections(new Set())
+              setArtists(new Set())
+              setQuery('')
+            }}
+          />
         </aside>
 
         <main className="min-w-0 flex-1">
@@ -340,6 +329,53 @@ export default function App() {
           onIndex={setLightbox}
           onClose={() => setLightbox(null)}
         />
+      )}
+
+      {sheetPresence.mounted && (
+        <div
+          className={`overlay fixed inset-0 z-40 flex items-end lg:hidden ${
+            sheetPresence.visible ? 'bg-ink/25 opacity-100 backdrop-blur-sm' : 'bg-ink/0 opacity-0'
+          }`}
+          onClick={() => setFilterSheet(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="篩選"
+            className={`glass-solid drawer flex max-h-[78vh] w-full flex-col rounded-t-[2rem] rounded-b-none border-x-0 border-b-0 p-4 ${
+              sheetPresence.visible ? 'translate-y-0' : 'translate-y-full'
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex shrink-0 items-center justify-between">
+              <h2 className="text-sm font-bold">篩選</h2>
+              <button
+                type="button"
+                onClick={() => setFilterSheet(false)}
+                aria-label="關閉"
+                className="tx hover:bg-peach/20 hover:text-peach-deep text-ink-soft rounded-full p-2 hover:rotate-90"
+              >
+                <Close className="size-5" />
+              </button>
+            </div>
+            <FacetRail
+            imageCount={images.length}
+            totalBytes={library?.total_bytes ?? 0}
+            collectionFacets={collectionFacets}
+            artistFacets={artistFacets}
+            collections={collections}
+            artists={artists}
+            filtersOn={filtersOn}
+            onToggleCollection={(key) => setCollections((prev) => toggle(prev, key))}
+            onToggleArtist={(key) => setArtists((prev) => toggle(prev, key))}
+            onClear={() => {
+              setCollections(new Set())
+              setArtists(new Set())
+              setQuery('')
+            }}
+            />
+          </div>
+        </div>
       )}
 
       {fetchUnlocked && fetchPresence.mounted && (

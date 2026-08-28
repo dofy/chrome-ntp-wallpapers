@@ -125,3 +125,11 @@ export const ChevronDown = ({ className = 'size-4' }: IconProps) => (
     <path d="m6 9.5 6 6 6-6" />
   </svg>
 )
+
+export const Filter = ({ className = 'size-4' }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="M4 6.5h16" />
+    <path d="M7 12h10" />
+    <path d="M10 17.5h4" />
+  </svg>
+)
